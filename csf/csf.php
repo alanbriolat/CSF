@@ -160,7 +160,7 @@ class CSF_DB extends PDO
         $query = array_shift($argv);
         $stmt = $this->prepare($query);
 
-        if ( !empty($argv) && is_array($argv[0]) )
+        if ( count($argv) == 1 && is_array($argv[0]) )
             $stmt->execute($argv[0]);
         else
             $stmt->execute($argv);
@@ -180,7 +180,7 @@ class CSF_DB_Statement extends PDOStatement
     /*
      * Fetch all rows, including row count
      *
-     * Returns an associative array with 2 elements:
+     * Convenience method returning an associative array with 2 elements:
      *
      *      'data'      => array of rows as associative arrays
      *      'rowcount'  => number of rows in the result set
@@ -196,16 +196,22 @@ class CSF_DB_Statement extends PDOStatement
     /*
      * Execute statement
      *
-     * Convenience method giving a variable-arguments version of
-     * PDOStatement::execute($array).
+     * Override PDOStatement::execute() with a version which allows both single
+     * and variable argument count calls, e.g.
      *
-     * Call as $stmt->exec($arg1, $arg2, $arg3).
-     *
-     * Use $stmt->execute() if you want to use named arguments in
+     *      $stmt->execute(array('foo' => 'bar'));
+     * or
+     *      $stmt->execute(array('bar', 'baz'));
+     * or
+     *      $stmt->execute('bar', 'baz');
      */
-    public function exec()
+    public function execute()
     {
-        return $this->execute(func_get_args());
+        $argv = func_get_args();
+        if ( count($argv) == 1 && is_array($argv[0]) )
+            return parent::execute($argv[0]);
+        else
+            return parent::execute($argv);
     }
 }
 ?>
