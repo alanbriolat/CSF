@@ -82,75 +82,12 @@ class CSF
     }
 
     /*
-     * Load a module
-     *
-     * $module
-     *      The name of the module to load.  This can be in the format 
-     *      `MyModule`, `subdir/MyModule` etc.  The "module name" part will
-     *      be converted to lowercase, and the class loaded from 
-     *      `<basedir>/$module.php`  (e.g. `.../subdir/mymodule.php`)
-     *
-     * $args (default: array())
-     *      Arguments to pass to the constructor of the module.
-     *
-     * $alias (default: class name from $module)
-     *      Name to give the module, for accessing it via `$csf->mymodule` or
-     *      `CSF::$mymodule`.  Useful for things like database classes where 
-     *      more than one instance may be needed.
-     *
-     * $basedir (default: `CSF_BASEDIR/modules`, fallback to `CSF_BASEDIR/core`)
-     *      The base directory to load the module from.  The path obtained from
-     *      $module is added to this to get the full path to the module.
-     */
-    public static function &load_module($module,
-                                        $args = array(), 
-                                        $alias = null,
-                                        $basedir = null)
-    {
-        // Split the module name
-        $class = basename($module);
-        $dir = ($class == $module) ? '' : dirname($module);
-
-        // Get the access name for the module
-        $name = empty($alias) ? $class : $alias;
-
-        // Check if the module is already loaded
-        if ( !array_key_exists($name, self::$_modules) )
-        {
-            // Decide the paths based on whether or not one was supplied
-            if ( is_null($basedir) )
-            {
-                // Paths if none supplied - CSF modules dir, with fallback to 
-                // core - should allow core modules to be overridden without 
-                // removing them
-                $paths = array(
-                    rtrim(CSF_BASEDIR . "/modules/$dir", '/'),
-                    rtrim(CSF_BASEDIR . "/core/$dir", '/'),
-                );
-            }
-            else
-            {
-                // If a path is supplied, use it
-                $paths = array(rtrim("$basedir/$dir"));
-            }
-
-            // Make sure the class is loaded
-            self::load_class($class, $paths);
-
-            // Instantiate the class
-            $ref = new ReflectionClass($class);
-            self::$_modules[$name] = $ref->newInstanceArgs($args);
-        }
-
-        // Return the module - it should be loaded by now!
-        return self::$_modules[$name];
-    }
-
-    /*
      * Load a class
      *
-     * Helper function to try everything possible to get a class loaded if it's
-     * not already loaded.
+     * Helper function for loading classes.  The class name is converted to a
+     * lowercase filename with a '.php' extension, and searched for in all 
+     * directories in $paths until found.  An error occurs if the class failed 
+     * to be loaded.
      *
      * $class
      *      The class to load.
@@ -172,6 +109,94 @@ class CSF
             trigger_error("Class '$class' could not be loaded - please check "
                 . "that it is defined or exists at '$class.php' in a supplied"
                 . " path.", E_USER_ERROR);
+    }
+
+    /*
+     * Make a module
+     *
+     * Create an instance of a module and return it, without plugging it into 
+     * the framework object.
+     *
+     * $module
+     *      The name of the module to load.  This can be in the format 
+     *      `MyModule`, `subdir/MyModule` etc.  The "module name" part will
+     *      be converted to lowercase, and the class loaded from 
+     *      `<basedir>/$module.php`  (e.g. `.../subdir/mymodule.php`)
+     *
+     * $args (default: array())
+     *      Arguments to pass to the constructor of the module.
+     *
+     * $basedir (default: `CSF_BASEDIR/modules`, fallback to `CSF_BASEDIR/core`)
+     *      The base directory to load the module from.  The path obtained from
+     *      $module is added to this to get the full path to the module.
+     */
+    public static function make_module($module, 
+                                       $args = array(), 
+                                       $basedir = null)
+    {
+        // Split the module name
+        $class = basename($module);
+        $dir = ($class == $module) ? '' : dirname($module);
+
+        // Decide the paths based on whether or not one was supplied
+        if ( is_null($basedir) )
+        {
+            // Paths if none supplied - CSF modules dir, with fallback to 
+            // core - should allow core modules to be overridden without 
+            // removing them
+            $paths = array(
+                rtrim(CSF_BASEDIR . "/modules/$dir", '/'),
+                rtrim(CSF_BASEDIR . "/core/$dir", '/'),
+            );
+        }
+        else
+        {
+            // If a path is supplied, use it
+            $paths = array(rtrim("$basedir/$dir"));
+        }
+
+        // Make sure the class is loaded
+        self::load_class($class, $paths);
+
+        // Instantiate the class
+        $ref = new ReflectionClass($class);
+        return $ref->newInstanceArgs($args);
+    }
+
+    /*
+     * Load a module
+     *
+     * $module
+     *      The module to load - see CSF::make_module().
+     *
+     * $args (default: array())
+     *      Arguments to pass to the constructor of the module.
+     *
+     * $alias (default: class name from $module)
+     *      Name to give the module, for accessing it via `$csf->mymodule` or
+     *      `CSF::$mymodule`.  Useful for things like database classes where 
+     *      more than one instance may be needed.
+     *
+     * $basedir
+     *      The base directory to load the module from - see CSF::make_module()
+     */
+    public static function load_module($module,
+                                       $args = array(), 
+                                       $alias = null,
+                                       $basedir = null)
+    {
+        // Get the access name for the module
+        $name = empty($alias) ? basename($module) : $alias;
+
+        // Check if the module is already loaded
+        if ( !array_key_exists($name, self::$_modules) )
+        {
+            // Make the module
+            self::$_modules[$name] =& self::make_module($module, $args, $basedir);
+        }
+
+        // Return the module - it should be loaded by now!
+        return self::$_modules[$name];
     }
 }
 
