@@ -28,10 +28,10 @@ define('CSF_BASEDIR', dirname(__FILE__));
 class CSF
 {
     // Singleton instance
-    private static $_instance = null;
+    protected static $_instance = null;
 
     // Loaded modules
-    private static $_modules = array();
+    protected static $_modules = array();
 
     /*
      * Constructor
@@ -79,6 +79,99 @@ class CSF
         }
 
         return self::$_modules[$module];
+    }
+
+    /*
+     * Load a module
+     *
+     * $module
+     *      The name of the module to load.  This can be in the format 
+     *      `MyModule`, `subdir/MyModule` etc.  The "module name" part will
+     *      be converted to lowercase, and the class loaded from 
+     *      `<basedir>/$module.php`  (e.g. `.../subdir/mymodule.php`)
+     *
+     * $args (default: array())
+     *      Arguments to pass to the constructor of the module.
+     *
+     * $alias (default: class name from $module)
+     *      Name to give the module, for accessing it via `$csf->mymodule` or
+     *      `CSF::$mymodule`.  Useful for things like database classes where 
+     *      more than one instance may be needed.
+     *
+     * $basedir (default: `CSF_BASEDIR/modules`, fallback to `CSF_BASEDIR/core`)
+     *      The base directory to load the module from.  The path obtained from
+     *      $module is added to this to get the full path to the module.
+     */
+    public static function &load_module($module,
+                                        $args = array(), 
+                                        $alias = null,
+                                        $basedir = null)
+    {
+        // Split the module name
+        $class = basename($module);
+        $dir = ($class == $module) ? '' : dirname($module);
+
+        // Get the access name for the module
+        $name = empty($alias) ? $class : $alias;
+
+        // Check if the module is already loaded
+        if ( !array_key_exists($name, self::$_modules) )
+        {
+            // Decide the paths based on whether or not one was supplied
+            if ( is_null($basedir) )
+            {
+                // Paths if none supplied - CSF modules dir, with fallback to 
+                // core - should allow core modules to be overridden without 
+                // removing them
+                $paths = array(
+                    rtrim(CSF_BASEDIR . "/modules/$dir", '/'),
+                    rtrim(CSF_BASEDIR . "/core/$dir", '/'),
+                );
+            }
+            else
+            {
+                // If a path is supplied, use it
+                $paths = array(rtrim("$basedir/$dir"));
+            }
+
+            // Make sure the class is loaded
+            self::load_class($class, $paths);
+
+            // Instantiate the class
+            $ref = new ReflectionClass($class);
+            self::$_modules[$name] = $ref->newInstanceArgs($args);
+        }
+
+        // Return the module - it should be loaded by now!
+        return self::$_modules[$name];
+    }
+
+    /*
+     * Load a class
+     *
+     * Helper function to try everything possible to get a class loaded if it's
+     * not already loaded.
+     *
+     * $class
+     *      The class to load.
+     *
+     * $paths (default: array())
+     *      An array of possible directories to try.
+     */
+    public static function load_class($class, $paths = array())
+    {
+        $class = strtolower($class);
+
+        // Try all possible paths while the class doesn't exist
+        while ( !class_exists($class) && ($path = array_shift($paths)) )
+            if ( file_exists("$path/$class.php") )
+                include_once("$path/$class.php");
+
+        // Throw an error if the class still doesn't exist
+        if ( !class_exists($class) )
+            trigger_error("Class '$class' could not be loaded - please check "
+                . "that it is defined or exists at '$class.php' in a supplied"
+                . " path.", E_USER_ERROR);
     }
 }
 
