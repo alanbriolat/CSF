@@ -23,6 +23,11 @@
 define('CSF_BASEDIR', dirname(__FILE__));
 
 /*
+ * Load some useful libraries
+ */
+require_once(CSF_BASEDIR.'/lib/common.php');
+
+/*
  * The main CodeScape Framework class, implemented as a singleton.
  */
 class CSF
@@ -295,7 +300,7 @@ class CSF_DB extends PDO
         // implementation.  (Or more likely because of the fact PHP5's OOP is 
         // a big hack.)  Who cares - it's useful!  Inheritance without 
         // inheritance.
-        CSF_Module::__construct();
+        //CSF_Module::__construct();
 
         // PDO constructor
         parent::__construct($dsn, $user, $pass);
