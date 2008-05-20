@@ -18,27 +18,6 @@
  */
 
 /*
- * Request module interface
- *
- * TODO: Move this
- */
-interface CSF_IRequest
-{
-    // Constructor
-    public function __construct($fix_magic_quotes = false);
-
-    // Request variables
-    public function get($vars);
-    public function post($vars);
-    public function request($vars);
-    public function cookie($vars);
-
-    // Other request info
-    public function ip_address();
-    public function is_method($method);
-}
-
-/*
  * Request helper class
  *
  * Provide more intuitive access to various request variables and properties.

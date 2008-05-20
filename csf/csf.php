@@ -23,9 +23,10 @@
 define('CSF_BASEDIR', dirname(__FILE__));
 
 /*
- * Load some useful libraries
+ * Load core libraries
  */
 require_once(CSF_BASEDIR.'/lib/common.php');
+require_once(CSF_BASEDIR.'/lib/interfaces.php');
 
 /*
  * The main CodeScape Framework class, implemented as a singleton.
@@ -271,8 +272,7 @@ abstract class CSF_Module
                 trigger_error("Dependency '{$dep['name']}' with interface "
                     . "'{$dep['interface']}' not loaded", E_USER_ERROR);
 
-            $refobj = new ReflectionObject($obj);
-            if ( !$refobj->implementsInterface($dep['interface']) )
+            if ( !($obj instanceof $dep['interface']) )
                 trigger_error("Dependency '{$dep['name']}' does not implement "
                     . "interface '{$dep['interface']}'", E_USER_ERROR);
         }

@@ -18,37 +18,54 @@
  */
 
 /*
- * Session module interface
- *
- * TODO: Move this
- */
-interface CSF_ISession
-{
-    // Constructor - retrieve session data
-    public function __construct();
-
-    // Manipulate variables
-    public function get($name);
-    public function set($name, $value);
-    public function isset($name);
-    public function unset($name);
-    
-    // Override builtins
-    public function __get($name);
-    public function __set($name, $value);
-    public function __isset($name);
-    public function __unset($name);
-    
-    // Save session data
-    public function save();
-}
-
-/*
  * Persistent session data module
  *
  * Provide transparent access to persistent data
  */
-class Session extends CSF_Module implements CSF_ISession
+class Session extends CSF_Module // implements CSF_ISession
 {
+    protected $_depends = array(
+        array('name' => 'config', 'interface' => 'CSF_IConfig'),
+    );
+
+    /*
+     * Constructor
+     *
+     * Make sure there is a connection to a session database, load session data.
+     */
+    public function __construct()
+    {
+        $sessname = 'foobar';
+        parent::__construct();
+
+        // Create a database connection if there isn't one
+        if ( !$this->CSF->module_exists('session_db') )
+        {
+            // Path to an SQLite session database
+            $sessdbpath = CSF_BASEDIR . DIRECTORY_SEPARATOR . 'session.db';
+            
+            if ( !file_exists($sessdbpath) )
+            {
+                $db =& $this->CSF->load_module('CSF_DB', 
+                    array("sqlite:$sessdbpath"), 'session_db');
+                // Create the table
+                //  - use ROWID as the ID
+                //  - last_activity is stored in UNIX timestamp format
+                $db->query("
+                    CREATE TABLE session_$sessname (
+                        ip_address      VARCHAR(15) NOT NULL,
+                        user_agent      VARCHAR(64) NOT NULL,
+                        last_activity   BIGINT NOT NULL,
+                        data            TEXT
+                    )");
+            }
+            else
+            {
+                // Just open the database
+                $db =& $this->CSF->load_module('CSF_DB', 
+                    array("sqlite:$sessdbpath"), 'session_db');
+            }
+        }
+    }
 }
 ?>
