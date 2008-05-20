@@ -198,6 +198,32 @@ class CSF
         // Return the module - it should be loaded by now!
         return self::$_modules[$name];
     }
+
+    /*
+     * Link an existing module under a new name
+     */
+    public static function link_module($name, $newname)
+    {
+        if ( !array_key_exists($name, self::$_modules) )
+            trigger_error(
+                sprintf("Cannot link module '%s' to '%s': '%s' not loaded", 
+                    $name, $newname, $name), E_USER_ERROR);
+
+        if ( array_key_exists($newname, self::$_modules) )
+            trigger_error(
+                sprintf("Cannot link module '%s' to '%s': '%s' already exists", 
+                    $name, $newname, $newname), E_USER_ERROR);
+
+        self::$_modules[$newname] =& self::$_modules[$name];
+    }
+
+    /*
+     * Check if a module is loaded
+     */
+    public static function module_exists($name)
+    {
+        return array_key_exists($name, self::$_modules);
+    }
 }
 
 
@@ -215,14 +241,36 @@ abstract class CSF_Module
     // The framework object
     protected $CSF = null;
 
+    // Dependencies
+    protected $_depends = array(
+    // Example:
+    //    array(
+    //        'name'      => 'request',
+    //        'interface' => 'CSF_IRequest',
+    //    ),
+    );
+
     /*
      * Constructor
      *
-     * Get the CSF object
+     * Get the CSF object, check for dependencies.
      */
     public function __construct()
     {
         $this->CSF =& CSF::get_instance();
+
+        foreach  ( $this->_depends as $dep )
+        {
+            $obj =& $this->CSF->__get($dep['name']);
+            if ( !$obj )
+                trigger_error("Dependency '{$dep['name']}' with interface "
+                    . "'{$dep['interface']}' not loaded", E_USER_ERROR);
+
+            $refobj = new ReflectionObject($obj);
+            if ( !$refobj->implementsInterface($dep['interface']) )
+                trigger_error("Dependency '{$dep['name']}' does not implement "
+                    . "interface '{$dep['interface']}'", E_USER_ERROR);
+        }
     }
 }
 
