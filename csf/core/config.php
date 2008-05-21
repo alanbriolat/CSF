@@ -49,7 +49,7 @@ class Config extends CSF_Module implements CSF_IConfig
         $item = $this->_config;
 
         // Traverse array
-        foreach ( explode('.', $path) )
+        foreach ( explode('.', $path) as $p )
             $item = $item[$p];
         
         return $item;
@@ -68,7 +68,7 @@ class Config extends CSF_Module implements CSF_IConfig
 
         // Traverse multi-dimensional array
         foreach ( explode('.', $path) as $p )
-            if ( array_key_exists($p, $item)
+            if ( array_key_exists($p, $item) )
                 $item = $item[$p];
             else
                 return false;
