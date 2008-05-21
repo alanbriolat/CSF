@@ -18,13 +18,45 @@
  */
 
 /*
+ * Configuration object interface
+ */
+interface CSF_IConfig
+{
+    // Constructor should at least accept some config data
+    public function __construct($config);
+
+    // Get a value by path
+    // e.g. $c->get('foo.bar.0') === $config['foo']['bar'][0]
+    public function get($path);
+}
+
+/*
+ * Encryption module interface
+ */
+interface CSF_IEncrypt
+{
+    // Constructor should at least accept a key
+    public function __construct($key);
+
+    // Encrypt/decrypt a value
+    public function encrypt($data);
+    public function decrypt($data);
+
+    // Encrypt/decrypt with base64 ciphertext encoding
+    public function encode($data);
+    public function decode($data);
+
+    // Encrypt/decrypt (with base64 encoding) an entire variable, regardless
+    // of type etc. (for example, by serialising)
+    public function encode_var($data);
+    public function decode_var($data);
+}
+
+/*
  * Request module interface
  */
 interface CSF_IRequest
 {
-    // Constructor
-    public function __construct($fix_magic_quotes = false);
-
     // Request variables
     public function get($vars);
     public function post($vars);
@@ -41,9 +73,6 @@ interface CSF_IRequest
  */
 interface CSF_ISession
 {
-    // Constructor - retrieve session data
-    public function __construct();
-
     // Manipulate variables
     public function get($name);
     public function set($name, $value);

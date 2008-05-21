@@ -18,11 +18,11 @@
  */
 
 /*
- * Mcrypt wrapper class
+ * Mcrypt wrapper module
  *
  * This class provides a simple interface to commonly-used encryption methods 
  * using the mcrypt library, and also mhash for creating adequate key lengths.
- * Each instance ofth e class acts as an encryption interface for a particular
+ * Each instance of the class acts as an encryption interface for a particular
  * cipher/mode/key combination.
  *
  * e.g.
@@ -37,10 +37,10 @@
  * encode_var/decode_var:
  *      Encode/decode with variable serialisation
  */
-class Encrypt
+class Encrypt extends CSF_Module implements CSF_IEncrypt
 {
     // Encryption properties
-    private $module, $iv_size, $key;
+    protected $module, $iv_size, $key;
 
     /*
      * Constructor
