@@ -31,4 +31,18 @@ function uuid1()
 {
     return trim(exec('uuidgen -t'));
 }
+
+/* 
+ * Create a SHA256 hash of a string
+ * 
+ * It's better than MD5 and SHA1, so use it!
+ */
+function sha256($string)
+{
+	if (!function_exists('mhash')) {
+		trigger_error('mhash not supported by this PHP installation');
+	}
+	
+	return bin2hex(mhash(MHASH_SHA256, $string));
+}
 ?>
