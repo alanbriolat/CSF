@@ -39,10 +39,10 @@ function uuid1()
  */
 function sha256($string)
 {
-	if (!function_exists('mhash')) {
-		trigger_error('mhash not supported by this PHP installation');
-	}
-	
-	return bin2hex(mhash(MHASH_SHA256, $string));
+    if (!function_exists('mhash')) {
+        trigger_error('mhash not supported by this PHP installation');
+    }
+
+    return bin2hex(mhash(MHASH_SHA256, $string));
 }
 ?>
