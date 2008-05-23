@@ -28,6 +28,9 @@ interface CSF_IConfig
     // Get a value by path
     // e.g. $c->get('foo.bar.0') === $config['foo']['bar'][0]
     public function get($path);
+
+    // Check if a config value exists
+    public function exists($path);
 }
 
 /*
