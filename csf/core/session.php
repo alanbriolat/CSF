@@ -1,6 +1,6 @@
 <?php
 /*
- * CodeScape PHP Framework - A simple PHP web framework
+ * CodeScape Framework - A simple, flexible PHP framework
  * Copyright (C) 2008, Alan Briolat <alan@codescape.net>
  *
  * This program is free software: you can redistribute it and/or modify
