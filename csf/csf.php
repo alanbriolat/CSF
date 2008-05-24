@@ -20,13 +20,14 @@
 /*
  * Constant definitions
  */
+define('DS', DIRECTORY_SEPARATOR);          // Make some code shorter...
 define('CSF_BASEDIR', dirname(__FILE__));
 
 /*
  * Load core libraries
  */
-require_once(CSF_BASEDIR.'/lib/common.php');
-require_once(CSF_BASEDIR.'/lib/interfaces.php');
+require_once(CSF_BASEDIR.DS.'lib'.DS.'common.php');
+require_once(CSF_BASEDIR.DS.'lib'.DS.'interfaces.php');
 
 /*
  * The main CodeScape Framework class, implemented as a singleton.
@@ -107,8 +108,8 @@ class CSF
 
         // Try all possible paths while the class doesn't exist
         while ( !class_exists($class) && ($path = array_shift($paths)) )
-            if ( file_exists("$path/$class.php") )
-                include_once("$path/$class.php");
+            if ( file_exists($path.DS."$class.php") )
+                include_once($path.DS."$class.php");
 
         // Throw an error if the class still doesn't exist
         if ( !class_exists($class) )
@@ -145,20 +146,20 @@ class CSF
         $dir = ($class == $module) ? '' : dirname($module);
 
         // Decide the paths based on whether or not one was supplied
-        if ( is_null($basedir) )
+        if ( $basedir )
+        {
+            // If a path is supplied, use it
+            $paths = array($basedir.DS.$dir);
+        }
+        else
         {
             // Paths if none supplied - CSF modules dir, with fallback to 
             // core - should allow core modules to be overridden without 
             // removing them
             $paths = array(
-                rtrim(CSF_BASEDIR . "/modules/$dir", '/'),
-                rtrim(CSF_BASEDIR . "/core/$dir", '/'),
+                CSF_BASEDIR.DS.'modules'.DS.$dir,
+                CSF_BASEDIR.DS.'core'.DS.$dir,
             );
-        }
-        else
-        {
-            // If a path is supplied, use it
-            $paths = array(rtrim("$basedir/$dir"));
         }
 
         // Make sure the class is loaded
