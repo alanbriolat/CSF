@@ -18,7 +18,7 @@
  */
 
 /*
- * Request helper class
+ * Request module
  *
  * Provide more intuitive access to various request variables and properties.
  */
@@ -130,6 +130,14 @@ class Request extends CSF_Module implements CSF_IRequest
     public function is_method($method)
     {
         return strtolower($method) == $_SERVER['REQUEST_METHOD'];
+    }
+
+    /*
+     * Is this request HTTPS?
+     */
+    public function is_secure()
+    {
+        return isset($_SERVER['HTTPS']);
     }
 }
 
