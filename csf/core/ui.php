@@ -39,6 +39,22 @@ class UI extends CSF_Module
     protected $currentfile = null;
 
     /*
+     * Set context item
+     */
+    public function set($name, $value)
+    {
+        $this->context[$name] = $value;
+    }
+
+    /*
+     * Get context item
+     */
+    public function get($name)
+    {
+        return $this->context[$name];
+    }
+
+    /*
      * Template processor
      *
      * 3-stage template processor:
