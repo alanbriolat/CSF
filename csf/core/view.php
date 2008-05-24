@@ -147,8 +147,8 @@ class View extends CSF_Module
     {
         // Record current input file
         $this->currentfile = $__filename;
-        // Give a more informative reference for $this
-        $view =& $this;
+        // Expose the CSF object
+        $csf =& CSF::get_instance();
         // Start output buffering
         ob_start();
         // Expand the template context
