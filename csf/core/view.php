@@ -18,11 +18,11 @@
  */
 
 /*
- * UI and Templating module
+ * View and templating module
  *
  * Implements PHP-based heirarchical templating.
  */
-class UI extends CSF_Module
+class View extends CSF_Module
 {
     // Context data to make available to templates
     protected $context = array();
@@ -39,16 +39,32 @@ class UI extends CSF_Module
     protected $currentfile = null;
 
     /*
-     * Set context item
+     * Override property access to use context
+     */
+    public function __get($name)
+    {
+        return $this->context[$name];
+    }
+    public function __set($name, $value)
+    {
+        $this->context[$name] = $value;
+    }
+    public function __isset($name)
+    {
+        return isset($this->context[$name]);
+    }
+    public function __unset($name)
+    {
+        unset($this->context[$name]);
+    }
+
+    /*
+     * Same as $view->name property access
      */
     public function set($name, $value)
     {
         $this->context[$name] = $value;
     }
-
-    /*
-     * Get context item
-     */
     public function get($name)
     {
         return $this->context[$name];
@@ -132,7 +148,7 @@ class UI extends CSF_Module
         // Record current input file
         $this->currentfile = $__filename;
         // Give a more informative reference for $this
-        $tpl =& $this;
+        $view =& $this;
         // Start output buffering
         ob_start();
         // Expand the template context
@@ -170,7 +186,7 @@ class UI extends CSF_Module
      *
      * Used from within templates to mark the start of a block.
      */
-    protected function block_begin($block)
+    protected function begin($block)
     {
         // Check block nesting - cannot catch cross-file block self-nesting
         if ( in_array($block, $this->blockstack) )
@@ -187,7 +203,7 @@ class UI extends CSF_Module
      * the block content for the current level.  Ouputs either the next-deepest
      * version of the block, or the block itself.
      */
-    protected function block_end($block)
+    protected function end($block)
     {
         // Check the block being closed is correct
         $top = array_pop($this->blockstack);
@@ -223,7 +239,7 @@ class UI extends CSF_Module
      *
      * Outputs the next-shallowest version of the current block.
      */
-    protected function block_super()
+    protected function super()
     {
         // Get the current block
         $block = end($this->blockstack);
