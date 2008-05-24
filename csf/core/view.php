@@ -39,6 +39,16 @@ class View extends CSF_Module
     protected $currentfile = null;
 
     /*
+     * Constructor
+     *
+     * Save the template directory
+     */
+    public function __construct($template_path = '.')
+    {
+        $this->template_path = rtrim($template_path, '\\/');
+    }
+
+    /*
      * Override property access to use context
      */
     public function __get($name)
@@ -146,7 +156,7 @@ class View extends CSF_Module
     protected function sandbox($__filename, $__discard = true)
     {
         // Record current input file
-        $this->currentfile = $__filename;
+        $this->currentfile = $this->template_path.DS.$__filename;
         // Expose the CSF object
         $csf =& CSF::get_instance();
         // Start output buffering
@@ -154,7 +164,7 @@ class View extends CSF_Module
         // Expand the template context
         extract($this->context, EXTR_SKIP);
         // Run the template
-        include($__filename);
+        include($this->currentfile);
 
         // Check that
 
