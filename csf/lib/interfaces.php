@@ -22,9 +22,6 @@
  */
 interface CSF_IConfig
 {
-    // Constructor should at least accept some config data
-    public function __construct($config);
-
     // Get a value by path
     // e.g. $c->get('foo.bar.0') === $config['foo']['bar'][0]
     public function get($path);
@@ -38,9 +35,6 @@ interface CSF_IConfig
  */
 interface CSF_IEncrypt
 {
-    // Constructor should at least accept a key
-    public function __construct($key);
-
     // Encrypt/decrypt a value
     public function encrypt($data);
     public function decrypt($data);

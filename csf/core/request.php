@@ -125,6 +125,16 @@ class Request extends CSF_Module implements CSF_IRequest
     }
 
     /*
+     * Get user agent, optionally trimmed to $length chars
+     */
+    public function user_agent($length = 0)
+    {
+        return $length 
+            ? substr($_SERVER['HTTP_USER_AGENT'], 0, $length)
+            : $_SERVER['HTTP_USER_AGENT'];
+    }
+
+    /*
      * Is this request a particular method?
      */
     public function is_method($method)
