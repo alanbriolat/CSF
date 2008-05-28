@@ -326,7 +326,7 @@ class CSF_DB extends PDO
      * using the contents of this array, otherwise the rest of the arguments to
      * this method are used.
      */
-    public function query_exec()
+    public function query()
     {
         $argv = func_get_args();
         $query = array_shift($argv);
@@ -337,6 +337,15 @@ class CSF_DB extends PDO
         else
             $stmt->execute($argv);
         return $stmt;
+    }
+
+    /*
+     * Provide access to PDO's query() method
+     */
+    public function pdo_query()
+    {
+        $argv = func_get_args();
+        return call_user_func_array(array('PDO', 'query'), $argv);
     }
 }
 
