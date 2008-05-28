@@ -207,19 +207,20 @@ class View extends CSF_Module
     }
 
     /*
-     * End a template block
+     * End current template block
      *
      * Used from within templates to mark the end of a template block.  Stores
      * the block content for the current level.  Ouputs either the next-deepest
      * version of the block, or the block itself.
      */
-    protected function end($block)
+    protected function end()
     {
+        if ( empty($this->blockstack) )
+            trigger_error("Unexpected end of block: no open blocks", 
+                E_USER_ERROR);
+
         // Check the block being closed is correct
-        $top = array_pop($this->blockstack);
-        if ( $block != $top )
-            $this->parse_error(
-                "Unexpected end of block '$block', expected '$top'");
+        $block = array_pop($this->blockstack);
 
         // Get the output of the block
         $output = ob_get_clean();
