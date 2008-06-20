@@ -79,6 +79,13 @@ class BlockNode extends RootNode
     {
         $this->name = $block;
     }
+
+    public function addSuperNode()
+    {
+        $n = new SuperNode($this->name);
+        $this->children[] = $n;
+        return $n;
+    }
 }
 
 
@@ -252,29 +259,13 @@ class View extends CSF_Module
 
     /*
      * Previous block content
-     *
-     * Outputs the next-shallowest version of the current block.
      */
     protected function super()
     {
-        // Get the current block
-        $block = end($this->blockstack);
-
-        // Search up the "tree" for the block
-        $lvl = $this->level - 1;
-        while ( $lvl >= 0 )
-        {
-            if ( array_key_exists($block, $this->blocks[$lvl]) )
-            {
-                echo $this->blocks[$lvl][$block];
-                return;
-            }
-            else
-            {
-                $lvl--;
-            }
-        }
-        echo '';
+        if ( $this->currentnode instanceof BlockNode )
+            $this->currentnode->addSuperNode();
+        else
+            $this->parse_error("super() outside of block");
     }
 }
 ?>
