@@ -17,6 +17,71 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+class TextNode
+{
+    public function __construct($content)
+    {
+        $this->content = $content;
+    }
+
+    public function __toString()
+    {
+        return $this->content;
+    }
+}
+
+class SuperNode
+{
+    public function __construct($block)
+    {
+        $this->name = $block;
+    }
+
+    public function __toString()
+    {
+        return '';
+    }
+}
+
+class RootNode
+{
+    protected $children = array();
+    protected $blocks = array();
+
+    public function __construct()
+    {
+    }
+
+    public function __toString()
+    {
+        return implode('', $this->children);
+    }
+
+    public function addBlockNode($block)
+    {
+        $n = new BlockNode($block);
+        $this->children[] = $n;
+        $this->blocks[$block] = $n;
+        return $n;
+    }
+
+    public function addTextNode($text)
+    {
+        $n = new TextNode($text);
+        $this->children[] = $n;
+        return $n;
+    }
+}
+
+class BlockNode extends RootNode
+{
+    public function __construct($block)
+    {
+        $this->name = $block;
+    }
+}
+
+
 /*
  * View and templating module
  *
@@ -27,16 +92,10 @@ class View extends CSF_Module
     // Context data to make available to templates
     protected $context = array();
 
-    // Template the most recent template inherits from
+    // Parsing stuff
+    protected $nodestack = array();
+    protected $currentnode = null;
     protected $inherits = null;
-    // Block data, indexed by level then block name
-    protected $blocks = array();
-    // Level of the template currently being parsed
-    protected $level = 0;
-    // Stack for block nesting
-    protected $blockstack = array();
-    // Current filename, for giving useful errors
-    protected $currentfile = null;
 
     /*
      * Constructor
@@ -80,49 +139,22 @@ class View extends CSF_Module
         return $this->context[$name];
     }
 
-    /*
-     * Template processor
-     *
-     * 3-stage template processor:
-     *  1) Follow the inheritance to the "root" template
-     *  2) Traverse the templates from top to bottom, collecting block contents
-     *  3) Traverse templates bottom to top, merging blocks
-     */
     public function parse_template($fn)
     {
-        // Get the template heirarchy
-        $templates = array();
-        do {
-            // Parse the template so $this->inherits gets set
-            $this->sandbox($fn);
-            // Store the template path
-            array_unshift($templates, $fn);
-            // Use the next template, reset the inheritance variable
-            $fn = $this->inherits;
-            $this->inherits(null);
-            // Keep going until we reach the "root"
-        } while ( $fn );
+        $this->parse_file($fn);
+    }
 
-        // Reset the processor state
-        $this->reset();
+    protected function parse_file($__filename)
+    {
+        $this->currentfile = $this->template_path.DS.$__filename;
+        $csf =& CSF::get_instance();
+        
+        $root = new RootNode();
+        $this->currentnode = $root;
 
-        // Link $lvl to $this->level - neater code!
-        $lvl =& $this->level;
-
-        // Top-down parsing stage - collect block contents
-        for ( $lvl = 0 ; $lvl < count($templates) ; $lvl++ )
-        {
-            $this->sandbox($templates[$lvl]);
-        }
-
-        // Bottom-up parsing stage (all except the root)
-        for ( $lvl = count($templates) - 1 ; $lvl > 0 ; $lvl-- )
-        {
-            $this->sandbox($templates[$lvl]);
-        }
-
-        // Parse the root template
-        return $this->sandbox($templates[0], false);
+        // Sandbox the file, and append the last block of text to the root node
+        $root->addTextNode($this->sandbox($__filename));
+        var_dump($root);
     }
 
     /*
@@ -141,9 +173,9 @@ class View extends CSF_Module
      */
     protected function reset()
     {
-        $this->blocks = array();
+        $this->nodestack = array();
+        $this->currentnode = null;
         $this->inherits = null;
-        $this->level = 0;
     }
 
     /*
@@ -153,7 +185,7 @@ class View extends CSF_Module
      * accidentally change, with the template context expanded.  If $__discard 
      * is false, return the output of the template.
      */
-    protected function sandbox($__filename, $__discard = true)
+    protected function sandbox($__filename)
     {
         // Record current input file
         $this->currentfile = $this->template_path.DS.$__filename;
@@ -166,25 +198,12 @@ class View extends CSF_Module
         // Run the template
         include($this->currentfile);
 
-        // Check that
-
-        // Decide what to do with the output
-        if ( $__discard )
-        {
-            ob_end_clean();
-            return '';
-        }
-        else
-        {
-            return ob_get_clean();
-        }
+        // Return the text of the file
+        return ob_get_clean();
     }
 
     /*
      * Template inheritance
-     *
-     * Used from within templates to tell the processor that the template 
-     * inherits from the specified template.
      */
     protected function inherits($tpl)
     {
@@ -193,56 +212,42 @@ class View extends CSF_Module
 
     /*
      * Start a template block
-     *
-     * Used from within templates to mark the start of a block.
      */
     protected function begin($block)
     {
         // Check block nesting - cannot catch cross-file block self-nesting
-        if ( in_array($block, $this->blockstack) )
+        if ( $this->currentnode instanceof BlockNode 
+                && $this->currentnode->name == $block )
             $this->parse_error("Block '$block' nested inside itself");
 
-        array_push($this->blockstack, $block);
+
+        // End text node
+        $this->currentnode->addTextNode(ob_get_clean());
+        // Start block node
+        $n = $this->currentnode->addBlockNode($block);
+        // Push the old node to the stack, use the new current node
+        array_push($this->nodestack, $this->currentnode);
+        $this->currentnode = $n;
+        // Resume output buffering
         ob_start();
     }
 
     /*
      * End current template block
-     *
-     * Used from within templates to mark the end of a template block.  Stores
-     * the block content for the current level.  Ouputs either the next-deepest
-     * version of the block, or the block itself.
      */
     protected function end()
     {
-        if ( empty($this->blockstack) )
+        // Check that there is a block open
+        if ( empty($this->nodestack) )
             trigger_error("Unexpected end of block: no open blocks", 
                 E_USER_ERROR);
 
-        // Check the block being closed is correct
-        $block = array_pop($this->blockstack);
-
-        // Get the output of the block
-        $output = ob_get_clean();
-
-        // Store the output
-        $this->blocks[$this->level][$block] = $output;
-
-        // Search down the "tree" for an overridden version of the block
-        $lvl = $this->level + 1;
-        while ( $lvl < count($this->blocks) )
-        {
-            if ( array_key_exists($block, $this->blocks[$lvl]) )
-            {
-                echo $this->blocks[$lvl][$block];
-                return;
-            }
-            else
-            {
-                $lvl++;
-            }
-        }
-        echo $output;
+        // Add the remaining output as a text node
+        $this->currentnode->addTextNode(ob_get_clean());
+        // Restore the previous node from the stack
+        $this->currentnode = array_pop($this->nodestack);
+        // Resume output buffering
+        ob_start();
     }
 
     /*
