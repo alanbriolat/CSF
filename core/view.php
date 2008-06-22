@@ -29,6 +29,8 @@
  *              hierarchy
  *
  * The text of a tree is the concatenation of the text of all it's children.
+ *
+ * @todo    Possibly add Template::includefile() ?
  */
 
 /*
@@ -408,18 +410,6 @@ class Template extends Node
 
         // Store the file to inherit from
         self::$inherits_from = $file;
-    }
-
-    /*
-     * Include another template inline - the template included should *not* 
-     * inherit from anything, and any blocks will be treated as being part of 
-     * this template.
-     *
-     * @todo    Test this!
-     */
-    public static function includefile($file)
-    {
-        include(self::$instance->path.DS.$file);
     }
 }
 
