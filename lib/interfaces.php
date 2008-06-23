@@ -18,22 +18,6 @@
  */
 
 /*
- * Configuration object interface
- */
-interface CSF_IConfig
-{
-    // Constructor should at least accept some config data
-    public function __construct($config);
-
-    // Get a value by path
-    // e.g. $c->get('foo.bar.0') === $config['foo']['bar'][0]
-    public function get($path);
-
-    // Check if a config value exists
-    public function exists($path);
-}
-
-/*
  * Encryption module interface
  */
 interface CSF_IEncrypt

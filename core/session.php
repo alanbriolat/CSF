@@ -38,7 +38,6 @@ class Session extends CSF_Module implements CSF_ISession
 {
     // Dependencies
     protected $_depends = array(
-        array('name' => 'config', 'interface' => 'CSF_IConfig'),
         array('name' => 'request', 'interface' => 'CSF_IRequest'),
     );
 
@@ -65,7 +64,7 @@ class Session extends CSF_Module implements CSF_ISession
         parent::__construct();
 
         // Local reference to configuration
-        $config = $this->config = $this->CSF->config->get('csf.session');
+        $config = $this->config = CSF::config('csf.session');
         // Local reference to session database
         $this->db =& $this->CSF->__get($config['db_module']);
         // Cookie encryption

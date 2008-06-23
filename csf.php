@@ -36,18 +36,79 @@ class CSF
 {
     // Singleton instance
     protected static $_instance = null;
-
     // Loaded modules
     protected static $_modules = array();
+    // Configuration
+    protected static $_config = array();
 
     /*
      * Constructor
      *
      * Constructor is protected to prevent initialisation via any method other
-     * than CSF::get_instance().
+     * than CSF::get() get_instance().
      */
     protected function __construct()
     {
+    }
+
+    /*
+     * Singleton instance getter
+     */
+    public static function &CSF()
+    {
+        if ( !self::$_instance )
+            trigger_error('CSF: Cannot get instance before calling init()',
+                E_USER_ERROR);
+        return self::$_instance;
+    }
+
+    /*
+     * Initialiser
+     *
+     * Create CSF instance, store configuration information, return the
+     * singleton instance.
+     */
+    public static function init($config)
+    {
+        // Error check - has CSF already been initialised?
+        if ( self::$_instance )
+            trigger_error('CSF: init() has already been called', 
+                E_USER_ERROR);
+        self::$_config = $config;
+        self::$_instance = new CSF();
+        return self::$_instance;
+    }
+
+    /*
+     * Get configuration item
+     *
+     * Get the config item at the specified path.  If it doesn't exist, return
+     * the value of $default, but if $default is null then raise an error 
+     * instead.
+     */
+    public static function config($path, $default = null)
+    {
+        // Start at the root
+        $item = self::$_config;
+
+        // Traverse the multi-dimensional array
+        foreach ( explode('.', $path) as $p )
+        {
+            if ( !isset($item[$p]) )
+            {
+                if ( is_null($default) )
+                    trigger_error("CSF: Config item '$path' does not exist",
+                        E_USER_ERROR);
+                else
+                    return $default;
+            }
+            else
+            {
+                $item = $item[$p];
+            }
+        }
+
+        return $item;
     }
 
     /*
