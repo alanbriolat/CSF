@@ -73,4 +73,30 @@ interface CSF_ISession
     // Save session data
     public function save();
 }
+
+/*
+ * Controller interface
+ */
+interface CSF_IController
+{
+    // URL dispatch
+    public function dispatch_url($url);
+}
+
+/*
+ * View/templating interface
+ */
+interface CSF_IView
+{
+    // Manipulate context variables
+    public function get($name);
+    public function set($name, $value);
+    public function __get($name);
+    public function __set($name, $value);
+    public function __isset($name);
+    public function __unset($name);
+
+    // Render a template, optionally overriding the context
+    public function render($template, $context = null);
+}
 ?>

@@ -416,7 +416,7 @@ class Template extends Node
 /*
  * The CSF View module, a wrapper for the templating system
  */
-class View extends CSF_Module
+class View extends CSF_Module implements CSF_IView
 {
     // Context data to make available to templates
     protected $context = array();
