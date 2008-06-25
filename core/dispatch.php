@@ -31,9 +31,13 @@
  * A request for /mysection/foobar/baz would result in a call to 
  * MyController::dispatch_url('view/foobar/baz').
  *
- * Patterns are matched with preg_match/preg_replace, with an implicit start 
- * (^) character and end ($) character.  preg_replace is run to transform
- * the matched string before passing it to the controller's URL dispatcher.
+ * Routes are tried from the first to the last, so earlier routes take
+ * precedence over later routes.
+ *
+ * Patterns are matched with preg_match/preg_replace.  The "anchored" modifier
+ * is used, so patterns match only from the beginning of the URL (excluding the 
+ * leading /).  Note that anything that follows what the pattern matches will 
+ * remain appended to the resulting URL that gets passed to the controller.
  *
  * Controllers classes are assumed to be <prefix><controller>, where prefix is 
  * config item 'csf.dispatch.controller_prefix', and the containing file will be
@@ -41,7 +45,7 @@
  * 'csf.dispatch.controller_dir' and controller is the lowercase of the 
  * controller name.
  */
-class Dispatch
+class Dispatch extends CSF_Module
 {
     // Dependencies
     protected $_depends = array(
@@ -70,12 +74,22 @@ class Dispatch
 
         $routes = CSF::config('csf.dispatch.routes');
 
+        // Find a matching route
         foreach ( $routes as $pattern => $route )
         {
-            $controller = $route[0];
-            $rewrite = $route[1];
-
-
+            // Sanitise pattern for use as regex
+            $pattern = str_replace('#', '\#', $pattern);
+            if ( preg_match("#$pattern#A", $url) )
+            {
+                // Find/load the controller class
+                $class = $this->load_controller($route[0]);
+                // Initialise the controller
+                $c = new $class();
+                // Dispatch the URL
+                $c->dispatch_url(preg_replace("#$pattern#A", $route[1], $url));
+                // Don't bother with any more routes!
+                break;
+            }
         }
     }
 
@@ -89,6 +103,44 @@ class Dispatch
     protected function get_request_uri()
     {
         return ltrim($_SERVER['ORIG_PATH_INFO'], '/');
+    }
+
+    /*
+     * Attempt to load a controller class, returning the full class name 
+     * (including prefix) on success, and causing an error on failure.
+     */
+    protected function load_controller($controller)
+    {
+        // Class name
+        $prefix = CSF::config('csf.dispatch.controller_prefix', '');
+        $class = $prefix.$controller;
+
+        // Class path
+        $path = CSF::config('csf.dispatch.controller_dir');
+        $filepath = $path.DS.strtolower($controller).'.php';
+
+        // Try to load the class if it doesn't exist
+        if (!class_exists($class))
+            if (file_exists($filepath))
+                include($filepath);
+
+        // See if the class is still missing
+        if (class_exists($class))
+        {
+            // Check that the class implements the Controller interface
+            $r = new ReflectionClass($class);
+            if ($r->implementsInterface('CSF_IController'))
+                return $class;
+            else
+                trigger_error("Dispatch: Controller class $class does not "
+                    . "implement CSF_IController interface", E_USER_ERROR);
+        }
+        else
+        {
+            // Class still missing - give up and error
+            trigger_error("Dispatch: unable to load controller $controller "
+                . "($class) from $filepath", E_USER_ERROR);
+        }
     }
 }
 
@@ -106,6 +158,9 @@ class Controller implements CSF_IController
      * Treat the URL passed to the controller as method/arg1/arg2, resulting in
      * calling $this->method(arg1, arg2).  If the URL is "empty", call 
      * $this->index().  This is probably what most controllers will want to do.
+     *
+     * Tighter control over method calls is given by specifically excluding 
+     * dispatch_url, and only allowing dispatch to public methods.
      */
     public function dispatch_url($url)
     {
@@ -118,25 +173,30 @@ class Controller implements CSF_IController
         else
             $method = array_shift($urlparts);
 
-        // Method doesn't exist? 404!
-        if ( !method_exists($this, $method) )
+        // Exclude 'dispatch_url'
+        if (strtolower($method) == 'dispatch_url')
+            $this->error404($url);
+
+        // Check that the method both exists and is public
+        $r = new ReflectionClass($this);
+        if ($r->hasMethod($method) && $r->getMethod($method)->isPublic())
         {
-            // Controller-specific 404?
-            if ( !method_exists($this, 'error404') )
-            {
-                $this->error404($url);
-            }
-            else
-            {
-                // Fallback to Dispatch::error404()
-                Dispatch::error404(get_class($this), $url);
-            }
+            // Method exists - call it
+            call_user_func_array(array($this, $method), $urlparts);
         }
         else
         {
-            // Method exists - call it!
-            call_user_func_array(array($this, $method), $urlparts);
+            // Not found
+            $this->error404($url);
         }
+    }
+
+    /*
+     * Default 404 error - use Dispatch::error404()
+     */
+    protected function error404($url)
+    {
+        Dispatch::error404(get_class($this), $url);
     }
 }
 
