@@ -194,8 +194,8 @@ class Session extends CSF_Module implements CSF_ISession
             $this->config['name'],
             $this->cookie_crypt->encode_var($this->cookie),
             time() + 63072000,      // 2 years
-            $this->config['path'],
-            $this->config['domain']);
+            CSF::config('csf.session.path', '/'),
+            CSF::config('csf.session.domain', ''));
     }
 
     /*
