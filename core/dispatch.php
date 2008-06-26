@@ -24,9 +24,10 @@
  * The controller then has responsibility for handling the rest of the URL.
  * 
  * Routes are of the form:
- *      match => array(controller, rewrite)
+ *      match => controller, rewrite
  * For example:
- *      'mysection/(.*)' => array('MyController', 'view/$1')
+ *      'mysection/(.*)' => array('controller' => 'MyController', 
+ *                                'rewrite'    => 'view/$1')
  *
  * A request for /mysection/foobar/baz would result in a call to 
  * MyController::dispatch_url('view/foobar/baz').
@@ -82,11 +83,12 @@ class Dispatch extends CSF_Module
             if ( preg_match("#$pattern#A", $url) )
             {
                 // Find/load the controller class
-                $class = $this->load_controller($route[0]);
+                $class = $this->load_controller($route['controller']);
                 // Initialise the controller
                 $c = new $class();
                 // Dispatch the URL
-                $c->dispatch_url(preg_replace("#$pattern#A", $route[1], $url));
+                $c->dispatch_url(preg_replace(
+                    "#$pattern#A", $route['rewrite'], $url));
                 // Don't bother with any more routes!
                 break;
             }
@@ -99,6 +101,8 @@ class Dispatch extends CSF_Module
      * At the moment just tries ORIG_PATH_INFO, which should be suitable for
      * all usage with Apache (tested on 2.2).  This needs to be expanded to be
      * more robust, using PATH_INFO, QUERY_STRING and even possibly REQUEST_URI.
+     * 
+     * XXX: Make this actually do something useful
      */
     protected function get_request_uri()
     {
