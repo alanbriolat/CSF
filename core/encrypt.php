@@ -104,6 +104,6 @@ class Encrypt extends CSF_Module implements CSF_IEncrypt
 
     public function decode_var($data)
     {
-        return unserialize($this->decrypt(base64_decode($data)));
+        return @unserialize($this->decrypt(base64_decode($data)));
     }
 }
