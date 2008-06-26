@@ -57,7 +57,7 @@ class Session extends CSF_Module implements CSF_ISession
     /*
      * Constructor
      *
-     * Make sure there is a connection to a session database, load session data.
+     * Load session data, or create a new session.
      */
     public function __construct()
     {
