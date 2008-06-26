@@ -80,6 +80,15 @@ class CSF
     }
 
     /*
+     * Initialiser (using a YAML configuration file)
+     */
+    public static function init_YAML($file)
+    {
+        require_once(CSF_BASEDIR.DS.'lib'.DS.'spyc.php');
+        self::init(Spyc::YAMLLoad($file));
+    }
+
+    /*
      * Get configuration item
      *
      * Get the config item at the specified path.  If it doesn't exist, return
