@@ -426,9 +426,10 @@ class View extends CSF_Module implements CSF_IView
      *
      * Save the template directory
      */
-    public function __construct($template_path = '.')
+    public function __construct()
     {
-        $this->template_path = rtrim($template_path, '\\/');
+        $this->template_path = rtrim(
+            CSF::config('csf.view.template_dir'), '\\/');
     }
 
     /*
