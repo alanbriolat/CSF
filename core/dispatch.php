@@ -146,6 +146,19 @@ class Dispatch extends CSF_Module
                 . "($class) from $filepath", E_USER_ERROR);
         }
     }
+
+    /*
+     * Error 404
+     *
+     * Parses the template set in csf.dispatch.template_404 (defaults to 
+     * error404.php)
+     */
+    public static function error404($controller, $url)
+    {
+        echo CSF::CSF()->view->render(
+            CSF::config('csf.dispatch.template_404', 'error404.php'), 
+            array('controller' => $controller, 'url' => $url));
+    }
 }
 
 /*
@@ -172,7 +185,7 @@ class Controller implements CSF_IController
         $urlparts = explode('/', trim($url, '/'));
 
         // If the URL is empty, use index(), otherwise use the first part
-        if (empty($urlparts))
+        if ($urlparts[0] == '')
             $method = 'index';
         else
             $method = array_shift($urlparts);

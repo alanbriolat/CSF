@@ -199,6 +199,9 @@ class Template extends Node
         $this->path = $path;
         $this->filepath = $path.DS.$file;
         $this->context = $context;
+
+        if ( !file_exists($this->filepath) )
+            $this->error("Template not found");
     }
 
     /*
