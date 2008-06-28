@@ -227,7 +227,7 @@ class CSF
             // core - should allow core modules to be overridden without 
             // removing them
             $paths = array(
-                CSF_BASEDIR.DS.'modules'.DS.$dir,
+                CSF::config('csf.core.module_dir').DS.$dir,
                 CSF_BASEDIR.DS.'core'.DS.$dir,
             );
         }
