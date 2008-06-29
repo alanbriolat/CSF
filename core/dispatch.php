@@ -89,10 +89,13 @@ class Dispatch extends CSF_Module
                 // Dispatch the URL
                 $c->dispatch_url(preg_replace(
                     "#$pattern#A", $route['rewrite'], $url));
-                // Don't bother with any more routes!
-                break;
+                // Successfully dispatched
+                return;
             }
         }
+
+        // Didn't find a route - error
+        Dispatch::error404('(none)', $url);
     }
 
     /*
