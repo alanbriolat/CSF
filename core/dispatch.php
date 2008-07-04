@@ -101,15 +101,39 @@ class Dispatch extends CSF_Module
     /*
      * Get actual URI (i.e. what was redirected)
      *
-     * At the moment just tries ORIG_PATH_INFO, which should be suitable for
-     * all usage with Apache (tested on 2.2).  This needs to be expanded to be
-     * more robust, using PATH_INFO, QUERY_STRING and even possibly REQUEST_URI.
-     * 
-     * XXX: Make this actually do something useful
+     * Parts of this are inspired by CodeIgniter's "Router" class.  Tries both
+     * $_SERVER variables and environment variables.  Which variable is used can
+     * be overriden with csf.dispatch.uri_protocol being set to something other 
+     * than 'auto'.
      */
-    protected function get_request_uri()
+    public function get_request_uri()
     {
-        return ltrim($_SERVER['ORIG_PATH_INFO'], '/');
+        $protocol = strtoupper(CSF::config('csf.dispatch.uri_protocol', 'AUTO'));
+        if ($protocol == 'AUTO')
+        {
+            // Is there a PATH_INFO variable?
+            $path = isset($_SERVER['PATH_INFO'])
+                ? ltrim($_SERVER['PATH_INFO'], '/')
+                : ltrim(@getenv('PATH_INFO'), '/');
+            if ($path != '')
+                return $path;
+
+            // No PATH_INFO - try ORIG_PATH_INFO
+            $path = isset($_SERVER['ORIG_PATH_INFO'])
+                ? ltrim($_SERVER['ORIG_PATH_INFO'], '/')
+                : ltrim(@getenv('ORIG_PATH_INFO'), '/');
+            if ($path != '')
+                return $path;
+            
+            // Neither exist - return an empty URI
+            return '';
+        }
+        else
+        {
+            return isset($_SERVER[$protocol])
+                ? ltrim($_SERVER[$protocol])
+                : ltrim(@getenv($protocol));
+        }
     }
 
     /*
