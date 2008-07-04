@@ -128,7 +128,7 @@ class Session extends CSF_Module implements CSF_ISession
         $_SESSION =& $this->data;
 
         // Clean up timed out sessions
-        #$this->gc();
+        $this->gc();
     }
 
     /*
@@ -196,6 +196,24 @@ class Session extends CSF_Module implements CSF_ISession
             time() + 63072000,      // 2 years
             CSF::config('csf.session.path', '/'),
             CSF::config('csf.session.domain', ''));
+    }
+
+    /*
+     * Garbage collection - remove expired sessions
+     *
+     * Probability of garbage collection is set in csf.session.gc_prob, default
+     * is 0.01 (1% of pageviews).
+     */
+    protected function gc()
+    {
+        if ((rand()/getrandmax()) < CSF::config('csf.session.gc_prob', 0.01))
+        {
+            $this->db->query(
+                "DELETE FROM {$this->config['db_table']}
+                    WHERE last_activity < ?",
+                time() - $this->config['lifetime']);
+            echo "running gc";
+        }
     }
 
     /*
