@@ -73,12 +73,6 @@ class CSF_ModuleNotFound extends Exception
 class CSF_DependencyError extends Exception {}
 
 /*
- * Load core libraries
- */
-require_once(CSF_BASEDIR.DS.'lib'.DS.'common.php');
-require_once(CSF_BASEDIR.DS.'lib'.DS.'interfaces.php');
-
-/*
  * The main CodeScape Framework class, implemented as a singleton.
  */
 class CSF
@@ -97,12 +91,22 @@ class CSF
     /*
      * Constructor
      *
-     * Constructor is protected to prevent initialisation via any method other
-     * than CSF::init().
+     * Autoload libraries, helpers (TODO: and modules) specified in 
+     * 'csf.core.autoload.libraries', 'csf.core.autoload.helpers' (TODO: and
+     * 'csf.core.autoload.modules')
+     *
+     * The constructor is protected to prevent direct initialisation from 
+     * outside of the CSF class.
      */
     protected function __construct()
     {
-        CSF::load_library('spyc');
+        // These core libraries are always loaded
+        self::load_libraries(array('common', 'interfaces'));
+
+        self::load_libraries(
+            CSF::config('csf.core.autoload.libraries', array()));
+        self::load_helpers(
+            CSF::config('csf.core.autoload.helpers', array()));
     }
 
     /*
@@ -364,25 +368,29 @@ class CSF
     /*
      * Load a library
      *
-     * Include the file $lib.php from a library directory.  If $paths is not 
+     * Include the file $lib.php from a library directory.  If $basedir is not 
      * supplied, the path set at config item 'csf.core.library_dir' is tried, 
-     * followed by 'CSF_BASEDIR/lib'.  If $paths is supplied, the directories
-     * are tried in turn until the file is found.  If the library cannot be 
-     * loaded, a CSF_LoadError exception is thrown.  If the library has already
-     * been loaded, the request is ignored.
+     * followed by 'CSF_BASEDIR/lib'.  If $basedir is supplied, only 
+     * $basedir/$lib.php is tried.  If the library cannot be loaded, a 
+     * CSF_LoadError exception is thrown.  If the library has already been 
+     * loaded, the request is ignored.
      *
-     * @param   $lib    string      Library to load
-     * @param   $paths  array       Override paths to search for the library
+     * @param   $lib        string      Library to load
+     * @param   $basedir    string      Override search path
      * 
      * @throws  CSF_LoadError
      */
-    public static function load_library($lib, $paths = null)
+    public static function load_library($lib, $basedir = null)
     {
         // Stop if the library is already loaded
         if (in_array($lib, self::$_libraries)) return;
 
-        // Use default paths if none supplied
-        if (is_null($paths))
+        // Use $basedir if supplied
+        if ($basedir)
+        {
+            $paths = array($basedir);
+        }
+        else
         {
             try
             {
@@ -395,6 +403,7 @@ class CSF
                 $paths = array(CSF_BASEDIR.DS.'lib');
             }
         }
+
 
         // Try every path until the library is loaded
         foreach ($paths as $path)
@@ -415,6 +424,19 @@ class CSF
     }
 
     /*
+     * Load an array of libraries
+     *
+     * Uses CSF::load_library on each of the individual library names specified.
+     *
+     * @param   $libs       array       Libraries to load
+     * @param   $basedir    string      Override search path
+     */
+    public static function load_libraries($libs, $basedir = null)
+    {
+        foreach ($libs as $l) CSF::load_library($l, $basedir);
+    }
+
+    /*
      * Load a helper
      *
      * This works just like for libraries, with the only difference being that
@@ -422,27 +444,31 @@ class CSF
      * 'CSF_BASEDIR/helpers'.
      *
      * @param   $helper     string      Helper to load
-     * @param   $paths      array       Override search paths
+     * @param   $basedir    string      Override search path
      *
      * @throws  CSF_LoadError
      */
-    public static function load_helper($helper, $paths = null)
+    public static function load_helper($helper, $basedir = null)
     {
         // Stop if the helper is already loaded
         if (in_array($helper, self::$_helpers)) return;
 
-        // Use default paths if none supplied
-        if (is_null($paths))
+        // Use $basedir if supplied
+        if ($basedir)
+        {
+            $paths = array($basedir);
+        }
+        else
         {
             try
             {
                 $paths = array(
                     CSF::config('csf.core.helper_dir'), 
-                    CSF_BASEDIR.DS.'helper');
+                    CSF_BASEDIR.DS.'helpers');
             }
             catch (CSF_ConfigItemNotFound $e)
             {
-                $paths = array(CSF_BASEDIR.DS.'helper');
+                $paths = array(CSF_BASEDIR.DS.'helpers');
             }
         }
 
@@ -462,6 +488,19 @@ class CSF
         // If we get this far, the helper couldn't be loaded
         throw new CSF_LoadError("Could not load helper '$helper' from any of the "
             . "supplied paths (tried: ".implode(', ', $paths).")");
+    }
+
+    /*
+     * Load an array of helpers
+     *
+     * Uses CSF::load_helper on each of the individual helper names specified.
+     *
+     * @param   $helpers    array       Helpers to load
+     * @param   $basedir    string      Override search path
+     */
+    public static function load_helpers($helpers, $basedir = null)
+    {
+        foreach ($helpers as $l) CSF::load_helper($h, $basedir);
     }
 }
 
