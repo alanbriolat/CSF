@@ -70,7 +70,7 @@ class Dispatch extends CSF_Module
      */
     public function dispatch_url($url = null)
     {
-        $url = is_null($url) ? $this->get_request_uri() : $url;
+        $url = is_null($url) ? self::get_request_uri() : $url;
         $url = ltrim($url, '/');
 
         $routes = CSF::config('csf.dispatch.routes');
@@ -83,7 +83,7 @@ class Dispatch extends CSF_Module
             if ( preg_match("#$pattern#A", $url) )
             {
                 // Find/load the controller class
-                $class = $this->load_controller($route['controller']);
+                $class = self::load_controller($route['controller']);
                 // Initialise the controller
                 $c = new $class();
                 // Dispatch the URL
@@ -106,7 +106,7 @@ class Dispatch extends CSF_Module
      * be overriden with csf.dispatch.uri_protocol being set to something other 
      * than 'auto'.
      */
-    public function get_request_uri()
+    public static function get_request_uri()
     {
         $protocol = strtoupper(CSF::config('csf.dispatch.uri_protocol', 'AUTO'));
         if ($protocol == 'AUTO')
@@ -140,7 +140,7 @@ class Dispatch extends CSF_Module
      * Attempt to load a controller class, returning the full class name 
      * (including prefix) on success, and causing an error on failure.
      */
-    protected function load_controller($controller)
+    protected static function load_controller($controller)
     {
         // Class name
         $prefix = CSF::config('csf.dispatch.controller_prefix', '');
