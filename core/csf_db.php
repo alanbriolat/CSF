@@ -1,24 +1,15 @@
 <?php
-/*
+/**
  * CodeScape Framework - A simple, flexible PHP framework
- * Copyright (C) 2008, Alan Briolat <alan@codescape.net>
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * @package     CSF
+ * @author      Alan Briolat <alan@codescape.net>
+ * @copyright   (c) 2008, Alan Briolat
+ * @license     http://www.gnu.org/licenses/gpl-3.0.txt GNU GPLv3
  */
 
-/*
- * CodeScape Framework database module class
+/**
+ * CodeScape Framework database module
  *
  * Extend PDO to provide some useful extra convenience features.  All 
  * database-specific modules should extend from this, but it can also be used
@@ -27,10 +18,15 @@
  */
 class CSF_DB extends PDO
 {
-    /*
+    /**
      * Constructor
      *
-     * Get the framework object reference, set up the PDO stuff.
+     * Get the framework object reference, call PDO constructor, and generally
+     * configure PDO.
+     * 
+     * @param   string  $dsn        Database source name
+     * @param   string  $user       Database username (if required)
+     * @param   string  $pass       Database password (if required)
      */
     public function __construct($dsn, $user = null, $pass = null)
     {
@@ -44,19 +40,30 @@ class CSF_DB extends PDO
             array('CSF_DB_Statement'));
     }
 
-    /*
+    /**
      * Execute query
      *
      * Run the supplied query (first argument) as a prepared statement, 
      * executing it once with the rest of the arguments supplied.  Using this
      * should remove any need to EVER do anything unsafe like:
      *
-     *      $db->query("SELECT * FROM foo WHERE id = $unsafe_var");
+     * <code>
+     * $db->query("SELECT * FROM foo WHERE id = $unsafe_var");
+     * </code>
      *
      * No escaping needs to be done on the arguments passed to this method.  If
      * the second argument is the last and is an array, the query is executed 
      * using the contents of this array, otherwise the rest of the arguments to
      * this method are used.
+     *
+     * <code>
+     * $db->query('SELECT foo FROM bar WHERE id = ? AND baz < ?', 12, 15);
+     * // ... is equivalent to ...
+     * $db->query('SELECT foo FROM bar WHERE id = ? AND baz < ?', array(12, 15));
+     * </code>
+     *
+     * @param   string  $query      The query to execute
+     * @return  CSF_DB_Statement
      */
     public function query($query)
     {
@@ -71,8 +78,12 @@ class CSF_DB extends PDO
         return $stmt;
     }
 
-    /*
-     * Provide access to PDO's query() method
+    /**
+     * PDO query
+     *
+     * Provide access to PDO's query() method in case it's needed.
+     * 
+     * @return  PDOStatement
      */
     public function pdo_query()
     {
@@ -82,21 +93,24 @@ class CSF_DB extends PDO
 }
 
 
-/*
- * CodeScape Framework database statement class
+/**
+ * CodeScape Framework database statement
  * 
  * Used in place of PDOStatement for CSF_DB modules - extends PDOStatement, 
  * adding some useful convenience features.
  */
 class CSF_DB_Statement extends PDOStatement
 {
-    /*
-     * Fetch all rows, including row count
+    /**
+     * Fetch all rows and row count
      *
      * Convenience method returning an associative array with 2 elements:
+     * <ul>
+     *  <li><var>data</var> - array of rows as associative arrays</li>
+     *  <li><var>rowcount</var> - number of rows in <var>data</var>
+     * </ul>
      *
-     *      'data'      => array of rows as associative arrays
-     *      'rowcount'  => number of rows in the result set
+     * @return  array
      */
     public function fetchAllRows()
     {
@@ -106,17 +120,19 @@ class CSF_DB_Statement extends PDOStatement
         return $ret;
     }
 
-    /*
+    /**
      * Execute statement
      *
      * Override PDOStatement::execute() with a version which allows both single
      * and variable argument count calls, e.g.
      *
-     *      $stmt->execute(array('foo' => 'bar'));
-     * or
-     *      $stmt->execute(array('bar', 'baz'));
-     * or
-     *      $stmt->execute('bar', 'baz');
+     * <code>
+     * $stmt->execute(array('foo' => 'bar'));
+     * $stmt->execute(array('bar', 'baz'));
+     * $stmt->execute('bar', 'baz');
+     * </code>
+     *
+     * @return  CSF_DB_Statement
      */
     public function execute()
     {

@@ -1,31 +1,28 @@
 <?php
-/*
+/**
  * CodeScape Framework - A simple, flexible PHP framework
- * Copyright (C) 2008, Alan Briolat <alan@codescape.net>
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * @package     CSF
+ * @author      Alan Briolat <alan@codescape.net>
+ * @copyright   (c) 2008, Alan Briolat
+ * @license     http://www.gnu.org/licenses/gpl-3.0.txt GNU GPLv3
  */
 
 /*
- * Constant definitions
+ * Constants
  */
-define('DS', DIRECTORY_SEPARATOR);          // Make some code shorter...
+/** An alias to shorten file path code */
+define('DS', DIRECTORY_SEPARATOR);
+/** Make the CSF base directory globally accessible */
 define('CSF_BASEDIR', dirname(__FILE__));
 
-/*
- * Exception handler - outputs some nice HTML instead of PHP's default 
+/**
+ * Exception handler
+ *
+ * Outputs some nice HTML instead of PHP's default 
  * all-smashed-together-on-one-line output.
+ *
+ * @param   Exception   $e      The exception
  */
 function CSF_pretty_exception_handler($e)
 {
@@ -44,11 +41,24 @@ function CSF_pretty_exception_handler($e)
 }
 set_exception_handler('CSF_pretty_exception_handler');
 
-/*
- * Exceptions thrown by classes in this file
+/**
+ * General CSF core exception
  */
 class CSF_CoreException extends Exception {}
+
+/**
+ * Load error
+ *
+ * Thrown if CSF fails to load a module, library or helper.
+ */
 class CSF_LoadError extends Exception {}
+
+/**
+ * Configuration item not found
+ *
+ * Thrown if a call to CSF::config() can't find the requested item and no 
+ * default value was supplied.
+ */
 class CSF_ConfigItemNotFound extends Exception
 {
     public function __construct($path)
@@ -56,6 +66,12 @@ class CSF_ConfigItemNotFound extends Exception
         $this->message = "'$path' does not exist";
     }
 }
+
+/**
+ * Module already exists
+ *
+ * Thrown if loading a module would overwrite an already-loaded module.
+ */
 class CSF_ModuleExists extends Exception
 {
     public function __construct($module)
@@ -63,6 +79,13 @@ class CSF_ModuleExists extends Exception
         $this->message = "Module name '$module' already in use";
     }
 }
+
+/**
+ * Module not found
+ *
+ * Thrown when aliasing a loaded module fails because the original module hasn't
+ * been loaded.
+ */
 class CSF_ModuleNotFound extends Exception
 {
     public function __construct($module)
@@ -70,33 +93,45 @@ class CSF_ModuleNotFound extends Exception
         $this->message = "Module name '$module' not in use";
     }
 }
+
+/**
+ * Dependency not found
+ *
+ * Thrown if a dependency for a new module is missing or does not conform to 
+ * the required interface.
+ */
 class CSF_DependencyError extends Exception {}
 
-/*
- * The main CodeScape Framework class, implemented as a singleton.
+/**
+ * The core CodeScape Framework class
+ *
+ * The CodeScape Framework class is implemented using the singleton pattern, 
+ * but all its methods are static, so having a reference to the framework object
+ * is rarely necessary.
  */
 class CSF
 {
-    // Singleton instance
+    /** @var    CSF     Singleton instance */
     protected static $_instance = null;
-    // Loaded modules
+    /** @var    array   Loaded modules */
     protected static $_modules = array();
-    // Loaded libraries
+    /** @var    array   Loaded libraries */
     protected static $_libraries = array();
-    // Loaded helper libraries
+    /** @var    array   Loaded helper libraries */
     protected static $_helpers = array();
-    // Configuration
+    /** @var    array   Configuration */
     protected static $_config = array();
 
-    /*
+    /**
      * Constructor
      *
-     * Autoload libraries, helpers (TODO: and modules) specified in 
-     * 'csf.core.autoload.libraries', 'csf.core.autoload.helpers' (TODO: and
-     * 'csf.core.autoload.modules')
+     * Autoload libraries and helpers specified in 'csf.core.autoload.libraries'
+     * and 'csf.core.autoload.helpers' respectively.
      *
      * The constructor is protected to prevent direct initialisation from 
      * outside of the CSF class.
+     *
+     * @todo    Allow autoloading of modules
      */
     protected function __construct()
     {
@@ -109,10 +144,11 @@ class CSF
             CSF::config('csf.core.autoload.helpers', array()));
     }
 
-    /*
+    /**
      * Singleton instance getter
      *
      * @return  CSF
+     * @throws  CSF_CoreException
      */
     public static function &CSF()
     {
@@ -122,14 +158,15 @@ class CSF
         return self::$_instance;
     }
 
-    /*
+    /**
      * Initialiser
      *
      * Create CSF instance, store configuration information, return the
      * singleton instance.
      *
-     * @param   $config     array       Configuration data
+     * @param   array   $config     Configuration data
      * @return  CSF
+     * @throws  CSF_CoreException
      */
     public static function &init($config)
     {
@@ -141,12 +178,12 @@ class CSF
         return self::$_instance;
     }
 
-    /*
+    /**
      * Initialiser (using a YAML configuration file)
      * 
      * Load configuration from YAML file, then call the normal init() method.
      *
-     * @param   $file   string      Path to configuration file
+     * @param   string  $file       Path to configuration file
      * @return  CSF
      */
     public static function init_YAML($file)
@@ -155,18 +192,16 @@ class CSF
         return self::init(Spyc::YAMLLoad($file));
     }
 
-    /*
+    /**
      * Get configuration item
      *
      * Get the value of the configuration item at the specified path.  If the 
-     * item does not exist, return the value of $default.  If no $default is 
-     * supplied, throw CSF_ConfigItemNotFound.
+     * item does not exist, return the value of <var>$default</var>.  If no 
+     * <var>$default</var> is supplied, throw CSF_ConfigItemNotFound.
      *
-     * @param   $path       string      Configuration item to get
-     * @param   $default    mixed       Value to return if not found
-     * 
-     * @return  mixed       Value at $path, or value of $default
-     *
+     * @param   string  $path       Configuration item to get
+     * @param   mixed   $default    Value to return if not found
+     * @return  mixed   Value at <var>$path</var>, or value of <var>$default</var>
      * @throws  CSF_ConfigItemNotFound
      */
     public static function config($path, $default = null)
@@ -187,17 +222,19 @@ class CSF
         return $item;
     }
 
-    /*
+    /**
      * Get module as property of framework object
      *
      * Overload __get() so that $csf->foobar is the module that was loaded with
      * name 'foobar'.  To assign to a variable, use:
      *      
-     *      $mod =& CSF::$foobar;
-     * or
-     *      $mod =& $csf->foobar;
+     * <code>
+     * $mod =& CSF::$foobar;
+     * // or
+     * $mod =& $csf->foobar;
+     * </code>
      *
-     * @param   $module     string      Module name
+     * @param   string  $module     Name of module
      * @return  CSF_Module
      */
     public static function __get($module)
@@ -213,17 +250,16 @@ class CSF
         return self::$_modules[$module];
     }
 
-    /*
+    /**
      * Load a class
      *
      * Helper function for loading classes.  The class name is converted to a
      * lowercase filename with a '.php' extension, and searched for in all 
-     * directories in $paths until found.  An error occurs if the class failed 
-     * to be loaded.
+     * directories in <var>$paths</var> until found.  Throws CSF_LoadError if
+     * the class fails to be loaded.
      *
-     * @param   $class  string      Name of class to load
-     * @param   $paths  array       Directories possibly containing the class
-     *
+     * @param   string  $class      Name of class to load
+     * @param   array   $paths      Directories possibly containing the class
      * @throws  CSF_LoadError
      */
     public static function load_class($class, $paths = array())
@@ -244,7 +280,7 @@ class CSF
                 . "path (tried: ".implode(', ', $paths_orig).")");
     }
 
-    /*
+    /**
      * Make a module
      *
      * Create an instance of a module and return it, without plugging it into 
@@ -253,12 +289,12 @@ class CSF
      * module class 'FooBar' would be loaded from a file 'foobar.php'.
      *
      * By default, the config item 'csf.core.module_dir', followed by 
-     * 'CSF_BASEDIR/core', is tried as a path to the specified module.  This
-     * can be overridden using the $basedir argument.
+     * '<var>CSF_BASEDIR</var>/core', is tried as a path to the specified module.
+     * This can be overridden using the <var>$basedir</var> argument.
      * 
-     * @param   $module     string      Name of module to load
-     * @param   $args       array       Arguments to the module's constructor
-     * @param   $basedir    string      Override module path
+     * @param   string  $module     Name of module to load
+     * @param   array   $args       Argements to the module's constructor
+     * @param   string  $basedir    Override module search path
      * @return  CSF_Module
      */
     public static function make_module($module, 
@@ -295,21 +331,20 @@ class CSF
         return $ref->newInstanceArgs($args);
     }
 
-    /*
+    /**
      * Load a module
      *
      * Load the specified module and plug it into the framework under the 
-     * module's name, or if it's non-null, $alias (useful for modules that may
-     * have multiple instances).  Throws CSF_ModuleExists if the module name is
-     * already in use - if this is a problem, check with CSF::module_exists() 
-     * first.
+     * module's name, or if it's non-null, <var>$alias</var> (useful for modules
+     * that may have multiple instances).  Throws CSF_ModuleExists if the module
+     * name is already in use - if this is a problem, check with 
+     * CSF::module_exists() first.
      *
-     * @param   $module     string      The module to load
-     * @param   $args       array       Arguments to the module's constructor
-     * @param   $alias      string      Name to use, rather than the class name
-     * @param   $basedir    string      Override module path
+     * @param   string  $module     The module to load
+     * @param   array   $args       Arguments to the module's constructor
+     * @param   string  $alias      Override module name (default: class name)
+     * @param   string  $basedir    Override module search path
      * @return  CSF_Module
-     *
      * @throws  CSF_ModuleExists
      */
     public static function load_module($module,
@@ -329,7 +364,7 @@ class CSF
         return self::$_modules[$name];
     }
 
-    /*
+    /**
      * Link an existing module under a new name
      * 
      * You might want to do this if you have a module loaded which conforms to
@@ -338,9 +373,8 @@ class CSF
      * module.  If $newname is already in use, CSF_ModuleExists is thrown.  If
      * $name does not exist, CSF_ModuleNotFound is thrown.
      *
-     * @param   $source     string      Module to link
-     * @param   $target     string      New alias for the module
-     *
+     * @param   string  $source     Module to link
+     * @param   string  $target     New alias for the module
      * @throws  CSF_ModuleExists
      * @throws  CSF_ModuleNotFound
      */
@@ -354,10 +388,10 @@ class CSF
         self::$_modules[$target] =& self::$_modules[$source];
     }
 
-    /*
+    /**
      * Check if a module is loaded
      *
-     * @param   $name   string      Module name to check for
+     * @param   string  $name       Module name to check for
      * @return  boolean
      */
     public static function module_exists($name)
@@ -365,19 +399,19 @@ class CSF
         return array_key_exists($name, self::$_modules);
     }
 
-    /*
+    /**
      * Load a library
      *
-     * Include the file $lib.php from a library directory.  If $basedir is not 
-     * supplied, the path set at config item 'csf.core.library_dir' is tried, 
-     * followed by 'CSF_BASEDIR/lib'.  If $basedir is supplied, only 
-     * $basedir/$lib.php is tried.  If the library cannot be loaded, a 
-     * CSF_LoadError exception is thrown.  If the library has already been 
-     * loaded, the request is ignored.
+     * Include the file '<var>$lib</var>.php' from a library directory.  If 
+     * <var>$basedir</var> is not supplied, the path set at config item 
+     * 'csf.core.library_dir' is tried, followed by '<var>CSF_BASEDIR</var>/lib'.
+     * If <var>$basedir</var> is supplied, only 
+     * '<var>$basedir</var>/<var>$lib</var>.php' is tried.  If the library 
+     * cannot be loaded, a CSF_LoadError exception is thrown.  If the library
+     * has already been loaded, the request is ignored.
      *
-     * @param   $lib        string      Library to load
-     * @param   $basedir    string      Override search path
-     * 
+     * @param   string  $lib        Library to load
+     * @param   string  $basedir    Override library search path
      * @throws  CSF_LoadError
      */
     public static function load_library($lib, $basedir = null)
@@ -423,29 +457,28 @@ class CSF
             . "supplied paths (tried: ".implode(', ', $paths).")");
     }
 
-    /*
+    /**
      * Load an array of libraries
      *
      * Uses CSF::load_library on each of the individual library names specified.
      *
-     * @param   $libs       array       Libraries to load
-     * @param   $basedir    string      Override search path
+     * @param   array   $libs       Libraries to load
+     * @param   string  $basedir    Override library search path
      */
     public static function load_libraries($libs, $basedir = null)
     {
         foreach ($libs as $l) CSF::load_library($l, $basedir);
     }
 
-    /*
+    /**
      * Load a helper
      *
      * This works just like for libraries, with the only difference being that
      * the default directories are config item 'csf.core.helper_dir' and 
-     * 'CSF_BASEDIR/helpers'.
+     * '<var>CSF_BASEDIR</var>/helpers'.
      *
-     * @param   $helper     string      Helper to load
-     * @param   $basedir    string      Override search path
-     *
+     * @param   string  $helper     Helper to load
+     * @param   string  $basedir    Override helper search path
      * @throws  CSF_LoadError
      */
     public static function load_helper($helper, $basedir = null)
@@ -490,13 +523,13 @@ class CSF
             . "supplied paths (tried: ".implode(', ', $paths).")");
     }
 
-    /*
+    /**
      * Load an array of helpers
      *
      * Uses CSF::load_helper on each of the individual helper names specified.
      *
-     * @param   $helpers    array       Helpers to load
-     * @param   $basedir    string      Override search path
+     * @param   array   $helpers    Helpers to load
+     * @param   string  $basedir    Override search path
      */
     public static function load_helpers($helpers, $basedir = null)
     {
@@ -505,22 +538,34 @@ class CSF
 }
 
 
-/*
- * CodeScape Framework module class
+/**
+ * CodeScape Framework module base class
  *
- * All modules should derive from this class.  Provides $this->CSF->module as a
- * convenient way of accessing all other loaded modules.  May include more stuff
- * at a later date.
+ * <ul>
+ *  <li>Provides $this->CSF->module access to other modules.</li>
+ *  <li>Performs dependency checking using <var>$_depends</var>.</li>
+ * </ul>
  *
- * Don't forget to call parent::__construct() in subclass constructors if you 
- * want these features in your own modules.
+ * To take advantage of dependency checking, set <var>$_depends</var> in the 
+ * derived class:
+ * <code>
+ * protected $_depends = array(
+ *     array(
+ *         'name'      => 'request',
+ *         'interface' => 'CSF_IRequest',
+ *     ),
+ * );
+ * </code>
+ *
+ * <b>Don't forget to call parent::__construct() in subclass constructors if you 
+ * want these features in your own modules.</b>
  */
 abstract class CSF_Module
 {
-    // The framework object
+    /** @var    CSF     The framework object */
     protected $CSF = null;
 
-    // Dependencies
+    /** @var    array   Dependencies */
     protected $_depends = array(
     // Example:
     //    array(
@@ -529,7 +574,7 @@ abstract class CSF_Module
     //    ),
     );
 
-    /*
+    /**
      * Constructor
      *
      * Get the CSF object, check for dependencies.
