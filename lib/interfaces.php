@@ -1,102 +1,226 @@
 <?php
-/*
- * CodeScape Framework - A simple, flexible PHP framework
- * Copyright (C) 2008, Alan Briolat <alan@codescape.net>
+/**
+ * CodeScape Framework - Module interfaces
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * The method used for dependency checking is to see if particular modules 
+ * implement particular interfaces, since this allows core modules to be 
+ * overridden without breaking other core modules which depend upon them.  This
+ * file contains the interfaces for use when overriding core modules.  The 
+ * interfaces are automatically loaded by CSF.
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * @package     CSF
+ * @author      Alan Briolat <alan@codescape.net>
+ * @copyright   (c) 2008, Alan Briolat
+ * @license     http://www.gnu.org/licenses/gpl-3.0.txt GNU GPLv3
  */
 
-/*
+/**
  * Encryption module interface
  */
 interface CSF_IEncrypt
 {
-    // Constructor should at least accept a key
+    /**
+     * Constructor
+     * @param   string  $key        Encryption key
+     */
     public function __construct($key);
 
-    // Encrypt/decrypt a value
+    /**
+     * Encrypt value
+     * @param   mixed   $data       Simple value to encrypt
+     * @return  string  Non-printable binary!
+     */
     public function encrypt($data);
+    /**
+     * Decrypt value
+     * @param   string  $data       Binary data to decrypt
+     * @return  mixed
+     */
     public function decrypt($data);
 
-    // Encrypt/decrypt with base64 ciphertext encoding
+    /**
+     * Encrypt and base64 encode
+     * @param   mixed   $data       Simple value to encrypt
+     * @return  string  Base64-encoded encrypted value
+     */
     public function encode($data);
+    /**
+     * Base64 decode and decrypt
+     * @param   string  $data       Base64-encoded encrypted value
+     * @return  mixed   Decrypted decoded value
+     */
     public function decode($data);
 
-    // Encrypt/decrypt (with base64 encoding) an entire variable, regardless
-    // of type etc. (for example, by serialising)
+    /**
+     * Serialise, encrypt, encode
+     * @param   mixed   $data       Serialisable data to encrypt
+     * @return  string  Base64-encoded encrypted data
+     */
     public function encode_var($data);
+    /**
+     * Decode, decrypt, unserialise
+     * @param   string  $data       Base64-encoded encrypted data
+     * @return  mixed   Decrypted decoded data
+     */
     public function decode_var($data);
 }
 
-/*
+/**
  * Request module interface
  */
 interface CSF_IRequest
 {
-    // Request variables
+    /**
+     * Get HTTP GET variable(s)
+     * @param   mixed   $vars       Identifier(s) of variable(s) to return
+     * @return  mixed   Associative array of identifiers to values if 
+     *                  <var>$vars</var> is an array, otherwise the value at
+     *                  the specified identifier.
+     */
     public function get($vars);
+    /**
+     * Get HTTP POST variable(s)
+     * @param   array   $vars
+     * @return  array
+     * @see     get
+     */
     public function post($vars);
+    /**
+     * Get HTTP REQUEST (GET and POST combined) variable(s)
+     * @param   array   $vars
+     * @return  array
+     * @see     get
+     */
     public function request($vars);
+    /**
+     * Get HTTP COOKIE variable(s)
+     * @param   array   $vars
+     * @return  array
+     * @see     get
+     */
     public function cookie($vars);
 
-    // Other request info
+    /**
+     * Get IP address of client
+     * @return  string
+     */
     public function ip_address();
+    /**
+     * Check the HTTP request method
+     * @param   string  $method     The request method to check for
+     * @return  boolean <var>$method</var> == request method
+     */
     public function is_method($method);
 }
 
-/*
+/**
  * Session module interface
  */
 interface CSF_ISession
 {
-    // Manipulate variables
+    /**
+     * Get session variable
+     * @param   string  $name
+     * @return  mixed
+     */
     public function get($name);
+    /**
+     * Set session variable
+     * @param   string  $name
+     * @param   mixed   $value
+     */
     public function set($name, $value);
     
-    // Override builtins
+    /**
+     * Get session variable
+     * @param   string  $name
+     * @return  mixed
+     */
     public function __get($name);
+    /**
+     * Set session variable
+     * @param   string  $name
+     * @param   mixed   $value
+     */
     public function __set($name, $value);
+    /**
+     * Check if session variable is set
+     * @param   string  $name
+     * @return  boolean
+     */
     public function __isset($name);
+    /**
+     * Remove session variable
+     * @param   string  $name
+     */
     public function __unset($name);
-    
-    // Save session data
+
+    /**
+     * Save session data
+     */
     public function save();
 }
 
-/*
+/**
  * Controller interface
  */
 interface CSF_IController
 {
-    // URL dispatch
+    /**
+     * URL dispatch
+     * @param   string  $url    The URL to process
+     */
     public function dispatch_url($url);
 }
 
-/*
+/**
  * View/templating interface
+ * @todo    Add get_context()?
  */
 interface CSF_IView
 {
-    // Manipulate context variables
+    /**
+     * Get context variable
+     * @param   string  $name
+     * @return  mixed
+     */
     public function get($name);
+    /**
+     * Set context variable
+     * @param   string  $name
+     * @param   mixed   $value
+     */
     public function set($name, $value);
+    /**
+     * Get context variable
+     * @param   string  $name
+     * @return  mixed
+     */
     public function __get($name);
+    /**
+     * Set context variable
+     * @param   string  $name
+     * @param   mixed   $value
+     */
     public function __set($name, $value);
+    /**
+     * Check if context variable exists
+     * @param   string  $name
+     * @return  boolean
+     */
     public function __isset($name);
+    /**
+     * Remove context variable
+     * @param   string  $name
+     */
     public function __unset($name);
 
-    // Render a template, optionally overriding the context
+    /**
+     * Render a template
+     * @param   string  $template   Template path relative to template directory
+     * @param   array   $context    Override context data
+     * @return  string  The processed template output
+     */
     public function render($template, $context = null);
 }
 ?>

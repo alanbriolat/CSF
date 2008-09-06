@@ -566,13 +566,7 @@ abstract class CSF_Module
     protected $CSF = null;
 
     /** @var    array   Dependencies */
-    protected $_depends = array(
-    // Example:
-    //    array(
-    //        'name'      => 'request',
-    //        'interface' => 'CSF_IRequest',
-    //    ),
-    );
+    protected $_depends = array();
 
     /**
      * Constructor

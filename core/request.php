@@ -1,23 +1,14 @@
 <?php
-/*
- * CodeScape Framework - A simple, flexible PHP framework
- * Copyright (C) 2008, Alan Briolat <alan@codescape.net>
+/**
+ * CodeScape Framework - Request module
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * @package     CSF
+ * @author      Alan Briolat <alan@codescape.net>
+ * @copyright   (c) 2008, Alan Briolat
+ * @license     http://www.gnu.org/licenses/gpl-3.0.txt GNU GPLv3
  */
 
-/*
+/**
  * Request module
  *
  * Provide more intuitive access to various request variables and properties.
@@ -44,26 +35,12 @@ class Request extends CSF_Module implements CSF_IRequest
         }
     }
 
-    /*
-     * Get POST variable(s)
-     */
-    public function post($vars)
-    {
-        if ( is_array($vars) )
-        {
-            $ret = array();
-            foreach ( $vars as $key )
-                $ret[$key] = $_POST[$key];
-            return $ret;
-        }
-        else
-        {
-            return $_POST[$vars];
-        }
-    }
-
-    /*
-     * Get GET variable(s)
+    /**
+     * Get HTTP GET variable(s)
+     *
+     * @param   mixed   $vars
+     * @return  mixed
+     * @see     CSF_IRequest::get
      */
     public function get($vars)
     {
@@ -80,8 +57,34 @@ class Request extends CSF_Module implements CSF_IRequest
         }
     }
 
-    /*
-     * Get REQUEST variable(s)
+    /**
+     * Get HTTP POST variable(s)
+     *
+     * @param   mixed   $vars
+     * @return  mixed
+     * @see     CSF_IRequest::get
+     */
+    public function post($vars)
+    {
+        if ( is_array($vars) )
+        {
+            $ret = array();
+            foreach ( $vars as $key )
+                $ret[$key] = $_POST[$key];
+            return $ret;
+        }
+        else
+        {
+            return $_POST[$vars];
+        }
+    }
+
+    /**
+     * Get HTTP REQUEST variable(s)
+     *
+     * @param   mixed   $vars
+     * @return  mixed
+     * @see     CSF_IRequest::get
      */
     public function request($vars)
     {
@@ -98,8 +101,12 @@ class Request extends CSF_Module implements CSF_IRequest
         }
     }
 
-    /*
-     * Get COOKIE variable(s)
+    /**
+     * Get HTTP COOKIE variable(s)
+     *
+     * @param   mixed   $vars
+     * @return  mixed
+     * @see     CSF_IRequest::get
      */
     public function cookie($vars)
     {
@@ -116,16 +123,25 @@ class Request extends CSF_Module implements CSF_IRequest
         }
     }
 
-    /*
-     * Get IP address
+    /**
+     * Get IP address of client
+     *
+     * @return  string
      */
     public function ip_address()
     {
         return $_SERVER['REMOTE_ADDR'];
     }
 
-    /*
-     * Get user agent, optionally trimmed to $length chars
+    /**
+     * Get user agent string
+     *
+     * Get the user agent string, optionally trimmed to <var>$length</var>
+     * characters.
+     *
+     * @param   int     $length     User agent string length
+     * @return  string
+     * @todo    Move this to CSF_IRequest?
      */
     public function user_agent($length = 0)
     {
@@ -134,16 +150,22 @@ class Request extends CSF_Module implements CSF_IRequest
             : $_SERVER['HTTP_USER_AGENT'];
     }
 
-    /*
-     * Is this request a particular method?
+    /**
+     * Check the HTTP request method
+     *
+     * @param   string  $method     The request method to check for
+     * @return  boolean <var>$method</var> == request method
      */
     public function is_method($method)
     {
         return strtolower($method) == $_SERVER['REQUEST_METHOD'];
     }
 
-    /*
-     * Is this request HTTPS?
+    /**
+     * Check if the connection is secure HTTP
+     *
+     * @return  boolean
+     * @todo    Move this to CSF_IRequest?
      */
     public function is_secure()
     {

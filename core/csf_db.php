@@ -1,6 +1,6 @@
 <?php
 /**
- * CodeScape Framework - A simple, flexible PHP framework
+ * CodeScape Framework - Database module
  *
  * @package     CSF
  * @author      Alan Briolat <alan@codescape.net>

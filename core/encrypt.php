@@ -1,23 +1,14 @@
 <?php
-/*
- * CodeScape Framework - A simple, flexible PHP framework
- * Copyright (C) 2008, Alan Briolat <alan@codescape.net>
+/**
+ * CodeScape Framework - mcrypt wrapper module
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * @package     CSF
+ * @author      Alan Briolat <alan@codescape.net>
+ * @copyright   (c) 2008, Alan Briolat
+ * @license     http://www.gnu.org/licenses/gpl-3.0.txt GNU GPLv3
  */
 
-/*
+/**
  * Mcrypt wrapper module
  *
  * This class provides a simple interface to commonly-used encryption methods 
@@ -25,28 +16,40 @@
  * Each instance of the class acts as an encryption interface for a particular
  * cipher/mode/key combination.
  *
- * e.g.
- *      $enc = new Encrypt('secret key', MCRYPT_RIJNDAEL_128, MCRYPT_MODE_CBC);
- *      echo $enc->decrypt($enc->encrypt('some secret text'));
- *      // Will output 'some secret text'
+ * <code>
+ * $enc = new Encrypt('secret key', MCRYPT_RIJNDAEL_128, MCRYPT_MODE_CBC);
+ * echo $enc->decrypt($enc->encrypt('some secret text'));
+ * // Will output 'some secret text'
+ * </code>
  *
- * encrypt/decrypt:
- *      Does exactly what it says on the tin
- * encode/decode:
- *      Encrypt/decrypt with base64 encoding
- * encode_var/decode_var:
- *      Encode/decode with variable serialisation
+ * Provides 3 interfaces:
+ * <ul>
+ *  <li><b>encrypt/decrypt:</b> Does exactly what it says on the tin - simple 
+ *      encryption of values, returning a raw binary string</li>
+ *  <li><b>encode/decode:</b> Encrypt/decrypt with base64 encoding</li>
+ *  <li><b>encode_var/decode_var:</b> Encode/decode with variable 
+ *      serialisation</li>
+ * </ul>
  */
 class Encrypt extends CSF_Module implements CSF_IEncrypt
 {
-    // Encryption properties
-    protected $module, $iv_size, $key;
+    /** @var    resource    mcrypt module */
+    protected $module;
+    /** @var    int         Initialisation vector size */
+    protected $iv_size;
+    /** @var    string      Encryption key */
+    protected $key;
 
-    /*
+    /**
      * Constructor
      *
      * Load the necessary encryption module and convert the key to the correct 
      * length.
+     *
+     * @param   string  $key        Encryption key
+     * @param   string  $cipher     Encryption cipher
+     * @param   string  $mode       Encryption mode
+     * @throws  Exception
      */
     public function __construct($key, 
                                 $cipher = MCRYPT_RIJNDAEL_256, 
@@ -67,6 +70,12 @@ class Encrypt extends CSF_Module implements CSF_IEncrypt
         $this->iv_size = mcrypt_enc_get_iv_size($this->module);
     }
 
+    /**
+     * Encrypt value
+     *
+     * @param   mixed   $data       Simple value to encrypt
+     * @return  string  Non-printable binary!
+     */
     public function encrypt($data)
     {   
         $iv = mcrypt_create_iv($this->iv_size, MCRYPT_DEV_URANDOM);
@@ -76,6 +85,12 @@ class Encrypt extends CSF_Module implements CSF_IEncrypt
         return $retval;
     }
 
+    /**
+     * Decrypt value
+     *
+     * @param   string  $data       Binary data to decrypt
+     * @return  mixed
+     */
     public function decrypt($data)
     {
         $iv = substr($data, 0, $this->iv_size);
@@ -87,21 +102,44 @@ class Encrypt extends CSF_Module implements CSF_IEncrypt
         return $retval;
     }
 
+    /**
+     * Encrypt and base64 encode
+     * @param   mixed   $data       Simple value to encrypt
+     * @return  string  Base64-encoded encrypted value
+     */
     public function encode($data)
     {
         return base64_encode($this->encrypt($data));
     }
 
+    /**
+     * Base64 decode and decrypt
+     *
+     * @param   string  $data       Base64-encoded encrypted value
+     * @return  mixed   Decrypted decoded value
+     */
     public function decode($data)
     {
         return $this->decrypt(base64_decode($data));
     }
 
+    /**
+     * Serialise, encrypt, encode
+     *
+     * @param   mixed   $data       Serialisable data to encrypt
+     * @return  string  Base64-encoded encrypted data
+     */
     public function encode_var($data)
     {
         return base64_encode($this->encrypt(serialize($data)));
     }
 
+    /**
+     * Decode, decrypt, unserialise
+     *
+     * @param   string  $data       Base64-encoded encrypted data
+     * @return  mixed   Decrypted decoded data
+     */
     public function decode_var($data)
     {
         return @unserialize($this->decrypt(base64_decode($data)));
