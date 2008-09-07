@@ -12,9 +12,9 @@
  * Mcrypt wrapper module
  *
  * This class provides a simple interface to commonly-used encryption methods 
- * using the mcrypt library, and also mhash for creating adequate key lengths.
- * Each instance of the class acts as an encryption interface for a particular
- * cipher/mode/key combination.
+ * using the mcrypt library, additionally using mhash for creating adequate
+ * length keys. Each instance of the class acts as an encryption interface for
+ * a particular cipher/mode/key combination.
  *
  * <code>
  * $enc = new Encrypt('secret key', MCRYPT_RIJNDAEL_128, MCRYPT_MODE_CBC);

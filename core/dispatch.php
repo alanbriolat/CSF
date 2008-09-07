@@ -1,50 +1,77 @@
 <?php
-/*
- * CodeScape Framework - A simple, flexible PHP framework
- * Copyright (C) 2008, Alan Briolat <alan@codescape.net>
+/**
+ * CodeScape Framework - URL dispatcher
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * @package     CSF
+ * @author      Alan Briolat <alan@codescape.net>
+ * @copyright   (c) 2008, Alan Briolat
+ * @license     http://www.gnu.org/licenses/gpl-3.0.txt GNU GPLv3
  */
 
-/*
+/**
  * Delegating URL dispatcher
  *
- * Use "route" definitions to dispatch a request to a particular controller. 
- * The controller then has responsibility for handling the rest of the URL.
- * 
- * Routes are of the form:
- *      match => controller, rewrite
- * For example:
- *      'mysection/(.*)' => array('controller' => 'MyController', 
- *                                'rewrite'    => 'view/$1')
+ * Dispatch uses an array of route definitions to dispatch a request to a 
+ * particular controller.  A route definition maps a "match" rule to a
+ * controller class name and a "rewrite" rule.
+ * <ul>
+ *  <li><b>Match ('blog/(\d+)'):</b> A regular expression to match the 
+ *      beginning of a URL.</li>
+ *  <li><b>Rewrite ('view/$1'):</b> An expression to replace the part of the URL
+ *      matched by the "match" regular expression - trailing parts of the URL 
+ *      are left unchanged.</li>
+ *  <li><b>Controller ('BlogController')</b>: The controller class to dispatch
+ *      the rewritten URL to - the dispatch_url() method is called on the 
+ *      controller class with the rewritten URL as its argument.</li>
+ * </ul>
  *
- * A request for /mysection/foobar/baz would result in a call to 
- * MyController::dispatch_url('view/foobar/baz').
+ * Dispatch is described as a delegating URL dispatcher because its method of 
+ * routing is to delegate the translated URL to a controller, instead of doing 
+ * all routing itself.  This means that each controller can implement its own 
+ * routing behaviour for the rest of the URL.
  *
- * Routes are tried from the first to the last, so earlier routes take
- * precedence over later routes.
+ * An example:
+ * <code>
+ * $routes = array(
+ *      // View blog post by ID
+ *      'blog/(\d+)' => array('controller' => 'BlogController',
+ *                            'rewrite'    => 'view/$1'),
+ *      // Other blog operations
+ *      'blog/(.*)'  => array('controller' => 'BlogController',
+ *                            'rewrite'    => '$1'),
+ *      // Index page
+ *      '.*'         => array('controller' => 'BlogController',
+ *                            'rewrite'    => 'index'),
+ * );
+ * </code>
  *
- * Patterns are matched with preg_match/preg_replace.  The "anchored" modifier
- * is used, so patterns match only from the beginning of the URL (excluding the 
- * leading /).  Note that anything that follows what the pattern matches will 
- * remain appended to the resulting URL that gets passed to the controller.
+ * In the above example, a visit to '/blog/12' would be internally rewritten as
+ * a call to dispatch_url('view/12') on the BlogController class.  It is 
+ * important to note that a call to '/blog/12/addcomment' in this example would 
+ * be rewritten to dispatch_url('view/12/addcomment') - this is explained below.
  *
- * Controllers classes are assumed to be <prefix><controller>, where prefix is 
- * config item 'csf.dispatch.controller_prefix', and the containing file will be
- * looked for at <dir>/<controller>.php, where dir is the config item
- * 'csf.dispatch.controller_dir' and controller is the lowercase of the 
- * controller name.
+ * Routes are tried first to last, so earlier route definitions take precedence
+ * over later ones.
+ *
+ * URL matching and rewriting is done using {@link preg_match preg_match} and 
+ * {@link preg_replace preg_replace}, so the "match" and "rewrite" rules follow 
+ * the syntax expected by those functions.  The "anchored" modifier is added to 
+ * the regular expression so patterns match only against the beginning of the 
+ * string.  <b>Rules should not include a leading '/'!</b>  Anything trailing 
+ * the matched string is preserved.
+ *
+ * Configuration:
+ * <ul>
+ *  <li>csf.dispatch.controller_dir - path to the directory containing the 
+ *      controller classes (default: 'controllers')</li>
+ *  <li>csf.dispatch.controller_prefix - prefix that converts a controller name
+ *      into its class name (default: '')</li>
+ *  <li>csf.dispatch.routes - dispatcher route definitions.</li>
+ * </ul>
+ *
+ * Controller classes must be at <dir>/<classname>.php where <dir> is set by 
+ * csf.dispatch.controller_dir and <classname> is the lowercase of the actual
+ * class name (which itself is composed of the prefix and the controller name).
  */
 class Dispatch extends CSF_Module
 {
