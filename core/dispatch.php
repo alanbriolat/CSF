@@ -75,25 +75,30 @@
  */
 class Dispatch extends CSF_Module
 {
-    // Dependencies
+    /** @var    array   Dependencies */
     protected $_depends = array(
         array('name' => 'view', 'interface' => 'CSF_IView'),
     );
 
-    /*
+    /**
      * Constructor
      *
-     * Work out what the original path being dispatched is.
+     * This constructor only calls the constructor of 
+     * {@link CSF_Module CSF_Module}.
      */
     public function __construct()
     {
         parent::__construct();
     }
 
-    /*
+    /**
      * Dispatch URL
      *
-     * This (hopefully) can also be used for "soft redirects"
+     * Perform URL rewriting and routing, dispatching the URL to the correct
+     * controller.  It should be possible to use this method for "soft 
+     * redirects" too - redirecting to a different URL within the same request.
+     *
+     * @param   string  $url        The URL to dispatch
      */
     public function dispatch_url($url = null)
     {
@@ -125,13 +130,16 @@ class Dispatch extends CSF_Module
         Dispatch::error404('(none)', $url);
     }
 
-    /*
+    /**
      * Get actual URI (i.e. what was redirected)
      *
-     * Parts of this are inspired by CodeIgniter's "Router" class.  Tries both
-     * $_SERVER variables and environment variables.  Which variable is used can
-     * be overriden with csf.dispatch.uri_protocol being set to something other 
-     * than 'auto'.
+     * Parts of this are inspired by 
+     * {@link http://www.codeigniter.com/ CodeIgniter}'s "Router" class.  Tries 
+     * both $_SERVER variables and environment variables.  Which variable is 
+     * used can be overriden by csf.dispatch.uri_protocol being set to something
+     * other than 'auto'.
+     *
+     * @return  string      The request URI
      */
     public static function get_request_uri()
     {
@@ -163,9 +171,13 @@ class Dispatch extends CSF_Module
         }
     }
 
-    /*
+    /**
+     * Load controller class
+     *
      * Attempt to load a controller class, returning the full class name 
      * (including prefix) on success, and causing an error on failure.
+     *
+     * @param   string  $controller     Controller name
      */
     protected static function load_controller($controller)
     {
@@ -201,11 +213,14 @@ class Dispatch extends CSF_Module
         }
     }
 
-    /*
+    /**
      * Error 404
      *
      * Parses the template set in csf.dispatch.template_404 (defaults to 
-     * error404.php)
+     * error404.php) and outputs it.
+     *
+     * @param   string  $controller     The controller which triggered the 404
+     * @param   string  $url            The URL that wasn't found
      */
     public static function error404($controller, $url)
     {
@@ -215,15 +230,19 @@ class Dispatch extends CSF_Module
     }
 }
 
-/*
- * Controller superclass
+/**
+ * Controller base class
  *
  * It is not essential to extend Controllers from this class, however all 
- * controllers must implement the CSF_IController interface.
+ * controllers must implement the CSF_IController interface.  This class 
+ * implements what is probably the most commonly desired behaviour of a
+ * controller - the URL passed to it is split up on '/', the first part being
+ * used to determine the method to call (only public methods allowed) and the
+ * rest being passed to the method as arguments.
  */
 class Controller implements CSF_IController
 {
-    /*
+    /**
      * Default dispatch action
      *
      * Treat the URL passed to the controller as method/arg1/arg2, resulting in
@@ -232,6 +251,8 @@ class Controller implements CSF_IController
      *
      * Tighter control over method calls is given by specifically excluding 
      * dispatch_url, and only allowing dispatch to public methods.
+     *
+     * @param   string  $url        The URL to dispatch
      */
     public function dispatch_url($url)
     {
@@ -262,8 +283,10 @@ class Controller implements CSF_IController
         }
     }
 
-    /*
+    /**
      * Default 404 error - use Dispatch::error404()
+     * 
+     * @param   string  $url        The URL that wasn't found
      */
     protected function error404($url)
     {

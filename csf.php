@@ -562,7 +562,7 @@ class CSF
  */
 abstract class CSF_Module
 {
-    /** @var    CSF     The framework object */
+    /** @var    CSF     A reference to the framework object */
     protected $CSF = null;
 
     /** @var    array   Dependencies */
