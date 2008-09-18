@@ -212,7 +212,6 @@ class Session extends CSF_Module implements CSF_ISession
                 "DELETE FROM {$this->config['db_table']}
                     WHERE last_activity < ?",
                 time() - $this->config['lifetime']);
-            echo "running gc";
         }
     }
 
