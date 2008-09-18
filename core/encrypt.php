@@ -77,8 +77,12 @@ class Encrypt extends CSF_Module implements CSF_IEncrypt
      * @return  string  Non-printable binary!
      */
     public function encrypt($data)
-    {   
-        $iv = mcrypt_create_iv($this->iv_size, MCRYPT_DEV_URANDOM);
+    {
+        // Suppress warnings because this will fail on Windows!
+        $iv = @mcrypt_create_iv($this->iv_size, MCRYPT_DEV_URANDOM);
+        // Fallback to MCRYPT_RAND if MCRYPT_DEV_URANDOM fails
+        if (empty($iv)) $iv = mcrypt_create_iv($this->iv_size, MCRYPT_RAND);
+
         mcrypt_generic_init($this->module, $this->key, $iv);
         $retval = $iv . mcrypt_generic($this->module, $data);
         mcrypt_generic_deinit($this->module);
