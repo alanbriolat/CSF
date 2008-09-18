@@ -229,15 +229,13 @@ class CSF
      * name 'foobar'.  To assign to a variable, use:
      *      
      * <code>
-     * $mod =& CSF::$foobar;
-     * // or
      * $mod =& $csf->foobar;
      * </code>
      *
      * @param   string  $module     Name of module
      * @return  CSF_Module
      */
-    public static function __get($module)
+    public function __get($module)
     {
         // Give a meaningful error if the module isn't loaded
         if ( !array_key_exists($module, self::$_modules) )
@@ -248,6 +246,22 @@ class CSF
         }
 
         return self::$_modules[$module];
+    }
+    
+    /**
+     * Static method for getting a module
+     *
+     * <code>
+     * $mod =& CSF::get('foobar');
+     * </code>
+     *
+     * @param   string  $module     Name of module
+     * @return  CSF_Module
+     */
+    public static function &get($module)
+    {
+        // No code duplication - just use the magic method on the instance
+        return self::$_instance->__get($module);
     }
 
     /**
