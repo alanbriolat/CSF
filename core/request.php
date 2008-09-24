@@ -158,7 +158,7 @@ class Request extends CSF_Module implements CSF_IRequest
      */
     public function is_method($method)
     {
-        return strtolower($method) == $_SERVER['REQUEST_METHOD'];
+        return strtolower($method) == strtolower($_SERVER['REQUEST_METHOD']);
     }
 
     /**
