@@ -224,6 +224,9 @@ class Dispatch extends CSF_Module
      */
     public static function error404($controller, $url)
     {
+        // Send the correct error code
+        header("HTTP/1.1 404 Not Found");
+        // Render the 404 page
         echo CSF::CSF()->view->render(
             CSF::config('csf.dispatch.template_404', 'error404.php'), 
             array('controller' => $controller, 'url' => $url));
@@ -286,11 +289,11 @@ class Controller implements CSF_IController
     /**
      * Default 404 error - use Dispatch::error404()
      * 
-     * @param   string  $url        The URL that wasn't found
+     * @param   string  $uri        The URI that wasn't found
      */
-    protected function error404($url)
+    protected function error404($uri)
     {
-        Dispatch::error404(get_class($this), $url);
+        Dispatch::error404(get_class($this), $uri);
     }
 }
 
