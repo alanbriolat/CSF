@@ -547,7 +547,7 @@ class CSF
      */
     public static function load_helpers($helpers, $basedir = null)
     {
-        foreach ($helpers as $l) CSF::load_helper($h, $basedir);
+        foreach ($helpers as $h) CSF::load_helper($h, $basedir);
     }
 }
 
