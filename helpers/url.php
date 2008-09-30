@@ -72,7 +72,7 @@ function redirect($uri)
  */
 function anchor($uri, $text = NULL, $secure = 'auto')
 {
-    return '<a href="' . site_url($uri, $secure) . '>' 
+    return '<a href="' . site_url($uri, $secure) . '">' 
         . ($text ? $text : $uri) . '</a>'; 
 }
 
