@@ -235,7 +235,7 @@ class CSF
      * @param   string  $module     Name of module
      * @return  CSF_Module
      */
-    public function &__get($module)
+    public static function &__get($module)
     {
         // Give a meaningful error if the module isn't loaded
         if ( !array_key_exists($module, self::$_modules) )
