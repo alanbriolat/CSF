@@ -142,6 +142,45 @@ abstract class CSF
 
 
     /**
+     * Load a library
+     *
+     * Load a library from within one of the library paths.  Paths are tried
+     * in reverse order so that the most recently added paths come first.  The
+     * library name is used both as the filename and to make sure that the
+     * library isn't loaded a second time.
+     *
+     * It is possible to use paths to modules, such as 'foo/bar' (which would
+     * search for 'foo/bar.php' under the library paths), since nothing
+     * particularly gets in the way of this.
+     *
+     * @param   string  $name       Library name
+     *
+     * @throws  csfLibraryNotFoundException
+     */
+    public static function load_library($name)
+    {
+        // Stop if the library has already been loaded
+        if (in_array($name, self::$_libraries))
+            return;
+
+        // Try and find the library
+        foreach (array_reverse(self::$_library_paths) as $path)
+        {
+            $filepath = $path.DIRSEP.$name.'.php';
+            if (file_exists($filepath))
+            {
+                require_once $filepath;
+                self::$_libraries[] = $name;
+                return;
+            }
+        }
+
+        // If we got this far, we failed
+        throw new csfLibraryNotFoundException($name, self::$_library_paths);
+    }
+
+
+    /**
      * Register a module
      *
      * Store an object, making it accessible via the CSF module access methods.
@@ -215,41 +254,35 @@ abstract class CSF
 
 
     /**
-     * Load a library
-     *
-     * Load a library from within one of the library paths.  Paths are tried
-     * in reverse order so that the most recently added paths come first.  The
-     * library name is used both as the filename and to make sure that the
-     * library isn't loaded a second time.
-     *
-     * It is possible to use paths to modules, such as 'foo/bar' (which would
-     * search for 'foo/bar.php' under the library paths), since nothing
-     * particularly gets in the way of this.
-     *
-     * @param   string  $name       Library name
-     *
-     * @throws  csfLibraryNotFoundException
+     * Load a module
      */
-    public static function load_library($name)
+    public static function load_module($name, $conf = null, $alias = null)
     {
-        // Stop if the library has already been loaded
-        if (in_array($name, self::$_libraries))
-            return;
+        // Get the name the module should be registered as
+        $MODULE_NAME = is_null($alias) ? $name : $alias;
 
-        // Try and find the library
-        foreach (array_reverse(self::$_library_paths) as $path)
+        // Get the module configuration if it hasn't been supplied
+        $MODULE_CONF = is_null($conf) 
+                        ? self::config("modules.$MODULE_NAME", array()) 
+                        : $conf;
+
+        // Find the path to the module file
+        $MODULE_PATH = null;
+        foreach (array_reverse(self::$_module_paths) as $path)
         {
-            $filepath = $path.DIRSEP.$name.'.php';
-            if (file_exists($filepath))
+            if (file_exists($path.DIRSEP.$name.'.php'))
             {
-                require_once $filepath;
-                self::$_libraries[] = $name;
-                return;
+                $MODULE_PATH = $path.DIRSEP.$name.'.php';
+                break;
             }
         }
 
-        // If we got this far, we failed
-        throw new csfLibraryNotFoundException($name, self::$_library_paths);
+        // Bail out if the file couldn't be found
+        if (is_null($MODULE_PATH))
+            throw new csfModuleNotFoundException($name, self::$_module_paths);
+
+        // "Load" the module - it's now the module's job to register itself
+        require $MODULE_PATH;
     }
 }
 
@@ -272,8 +305,15 @@ function CSF($name)
  * via other modules.  Inheriting from this class is not a prerequisite for
  * registering a module with CSF - PHP's lack of multiple inheritance support
  * would severely restrict the framework if it was compulsory.
+ *
+ * Just creating an instance of this class will let you access all modules via
+ * the single object, e.g.:
+ *
+ *      $csf = new csfModule();
+ *      $csf->foo->bar();
+ *      $csf->bar->baz();
  */
-abstract class csfModule
+class csfModule
 {
     /**
      * Get a module registered with CSF
@@ -316,7 +356,17 @@ class csfConfigNotFoundException extends Exception
     }
 }
 
-/** Module already exists */
+/** Library doesn't exist */
+class csfLibraryNotFoundException extends Exception
+{
+    public function __construct($name, $paths)
+    {
+        parent::__construct("Library '$name' could not be loaded (PATH=".
+            implode(PATH_SEPARATOR, $paths).')');
+    }
+}
+
+/** Module already registered */
 class csfModuleConflictException extends Exception
 {
     public function __construct($name)
@@ -325,7 +375,7 @@ class csfModuleConflictException extends Exception
     }
 }
 
-/** Module doesn't exist */
+/** Module not registered */
 class csfModuleNotRegisteredException extends Exception
 {
     public function __construct($name)
@@ -334,12 +384,12 @@ class csfModuleNotRegisteredException extends Exception
     }
 }
 
-/** Library doesn't exist */
-class csfLibraryNotFoundException extends Exception
+/** Module doesn't exist */
+class csfModuleNotFoundException extends Exception
 {
     public function __construct($name, $paths)
     {
-        parent::__construct("Library '$name' could not be loaded (PATH=".
+        parent::__construct("Module '$name' could not be loaded (PATH=".
             implode(PATH_SEPARATOR, $paths).')');
     }
 }
