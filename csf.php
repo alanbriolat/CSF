@@ -255,6 +255,30 @@ abstract class CSF
 
     /**
      * Load a module
+     *
+     * CSF figures out which file to include by looking for "$name.php" inside 
+     * one of the module paths (searched in reverse order, in the same way as 
+     * for loading libraries).  Once this has been done, CSF takes a very
+     * "hands-off" approach - it exposes the module name (either $name, or 
+     * $alias if supplied) as $MODULE_NAME, and the configuration (either as 
+     * supplied or loaded from CSF::config("modules.$MODULE_NAME")) as
+     * $MODULE_CONF.
+     *
+     * It is the responsibility of the module file itself to create and register
+     * object(s).  Other issues such as multiple declarations (if one module is
+     * loaded under multiple aliases), module name conflicts, etc. must also be
+     * handled by the module file.
+     *
+     * Throws csfModuleNotFoundException if no matching file could be found.
+     *
+     * @param   string  $name       The name of the module to load
+     * @param   mixed   $conf       Module configuration object - if set to 
+     *                              null, will attempt to load from global
+     *                              configuration, defaulting to an empty array
+     * @param   string  $alias      Name to use for the loaded module, 
+     *                              overriding $name if not null
+     *
+     * @throws  csfModuleNotFoundException
      */
     public static function load_module($name, $conf = null, $alias = null)
     {
