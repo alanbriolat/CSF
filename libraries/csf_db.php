@@ -1,44 +1,54 @@
 <?php
 /**
- * CodeScape Framework - Database module
+ * CodeScape Framework - Database library
  *
  * @package     CSF
  * @author      Alan Briolat <alan@codescape.net>
- * @copyright   (c) 2008, Alan Briolat
+ * @copyright   (c) 2009, Alan Briolat
  * @license     http://www.gnu.org/licenses/gpl-3.0.txt GNU GPLv3
  */
 
 /**
- * CodeScape Framework database module
+ * DB class
  *
- * Extend PDO to provide some useful extra convenience features.  All 
- * database-specific modules should extend from this, but it can also be used
- * as-is.  May pseudo-inherit from CSF_Module in future (by calling 
- * CSF_Module::__construct()), but not necessary for now.
+ * The csfDB class extends the PDO database class, providing some useful extra
+ * convenience functions.
  */
-class CSF_DB extends PDO
+class csfDB extends PDO
 {
+    /** @var    array   Options array */
+    protected $_options = array(
+        // Data Source Name (DSN) compatible with PDO
+        'dsn' => 'sqlite::memory:',
+        // Database login credentials
+        'user' => null,
+        'pass' => null,
+        // PDO configuration options
+        'error_mode' => PDO::ERRMODE_EXCEPTION,
+    );
+
+
     /**
      * Constructor
      *
-     * Get the framework object reference, call PDO constructor, and generally
-     * configure PDO.
-     * 
-     * @param   string  $dsn        Database source name
-     * @param   string  $user       Database username (if required)
-     * @param   string  $pass       Database password (if required)
+     * Call the PDO constructor, generally configure PDO.
      */
-    public function __construct($dsn, $user = null, $pass = null)
+    public function __construct($options = array())
     {
-        // PDO constructor
-        parent::__construct($dsn, $user, $pass);
+        // Use supplied options
+        $this->_options = array_merge($this->_options, $options);
 
-        // Most informative error level
+        // PDO constructor
+        parent::__construct($this->_options['dsn'],
+                            $this->_options['user'],
+                            $this->_options['pass']);
+
+        // Set error method
         $this->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         // Use custom statement class
-        $this->setAttribute(PDO::ATTR_STATEMENT_CLASS, 
-            array('CSF_DB_Statement'));
+        $this->setAttribute(PDO::ATTR_STATEMENT_CLASS, array('csfDBStatement'));
     }
+
 
     /**
      * Execute query
@@ -63,7 +73,7 @@ class CSF_DB extends PDO
      * </code>
      *
      * @param   string  $query      The query to execute
-     * @return  CSF_DB_Statement
+     * @return  csfDBStatement
      */
     public function query($query)
     {
@@ -78,28 +88,28 @@ class CSF_DB extends PDO
         return $stmt;
     }
 
+
     /**
      * PDO query
      *
-     * Provide access to PDO's query() method in case it's needed.
-     * 
+     * Provide un-mangled access to PDO's query() function
+     *
      * @return  PDOStatement
      */
-    public function pdo_query()
+    public function query_()
     {
-        $argv = func_get_args();
-        return call_user_func_array(array('PDO', 'query'), $argv);
+        return call_user_func_array(array('PDO', 'query'), func_get_args());
     }
 }
 
 
 /**
- * CodeScape Framework database statement
- * 
- * Used in place of PDOStatement for CSF_DB modules - extends PDOStatement, 
- * adding some useful convenience features.
+ * Statement class
+ *
+ * This class extends the PDOStatement class, adding some useful convenience
+ * functions.
  */
-class CSF_DB_Statement extends PDOStatement
+class csfDBStatement extends PDOStatement
 {
     /**
      * Fetch all rows and row count
@@ -120,6 +130,7 @@ class CSF_DB_Statement extends PDOStatement
         return $ret;
     }
 
+
     /**
      * Execute statement
      *
@@ -132,7 +143,7 @@ class CSF_DB_Statement extends PDOStatement
      * $stmt->execute('bar', 'baz');
      * </code>
      *
-     * @return  CSF_DB_Statement
+     * @return  csfDBStatement
      */
     public function execute()
     {
@@ -143,4 +154,3 @@ class CSF_DB_Statement extends PDOStatement
             return parent::execute($argv);
     }
 }
-?>
