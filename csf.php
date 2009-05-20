@@ -357,9 +357,11 @@ function CSF($name = null)
  * Just creating an instance of this class will let you access all modules via
  * the single object, e.g.:
  *
- *      $csf = new csfModule();
- *      $csf->foo->bar();
- *      $csf->bar->baz();
+ * <code>
+ * $csf = new csfModule();
+ * $csf->foo->bar();
+ * $csf->bar->baz();
+ * </code>
  */
 class csfModule
 {
