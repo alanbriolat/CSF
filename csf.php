@@ -68,9 +68,19 @@ abstract class CSF
         if (self::config('core.use_html_exception_handler', true))
             set_exception_handler('csf_html_exception_handler');
 
-        // TODO: Store library/module paths
-        // TODO: Autoload libraries
-        // TODO: Autoload modules
+        // Store library/module paths
+        foreach (self::config('core.library_paths', array()) as $path)
+            self::add_library_path($path);
+        foreach (self::config('core.module_paths', array()) as $path)
+            self::add_module_path($path);
+
+        // Autoload libraries
+        foreach (self::config('autoload.libraries', array()) as $lib)
+            self::load_library($lib);
+
+        // Autoload modules
+        foreach (self::config('autoload.modules', array()) as $mod)
+            self::load_module($mod);
     }
 
 
