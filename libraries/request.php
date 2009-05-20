@@ -16,15 +16,26 @@
  * 
  * Provides a wrapper around request parameters such as the $_GET, $_POST, 
  * $_COOKIE and $_REQUEST superglobals, the request URI (before rewriting),
- * the request method, etc.  Performs useful operations on the data such as
- * undoing the damage of "magic quotes".
+ * the request method, client information, etc.  Performs useful operations
+ * on the data such as undoing the damage of "magic quotes".
+ *
+ * @todo    Test get_uri() against mod_php, PHP CGI, lighttpd, IIS
+ * @todo    Do any HTTPDs require the REQUEST_URI method of obtaining the
+ *          originally requested URI?
  */
 class Request
 {
     /** @var    array   Request options (initialised with defaults) */
     protected $_options = array(
+        // Copy superglobals rather than modifying them
         'preserve_original' => false,
+        // Attempt to fix the damage caused my magic quotes, if enabled
         'fix_magic_quotes' => true,
+        // Method for getting the URI (AUTO, GET, REQUEST_URI, or the name of
+        // a $_SERVER variable)
+        'uri_protocol' => 'AUTO',
+        // The $_GET variable to use if uri_protocol=GET
+        'uri_get_variable' => '_uri',
     );
     /** @var    array   Cleaned $_GET variables */
     protected $_get = array();
@@ -35,7 +46,7 @@ class Request
     /** @var    array   Cleaned $_REQUEST variables */
     protected $_request = array();
     /** @var    string  The request URI */
-    protected $_uri;
+    protected $_uri = null;
 
 
     /**
@@ -82,8 +93,6 @@ class Request
             array_walk_recursive($this->_request,
                 array('Request', '_stripslashes_array_walk'));
         }
-
-        // TODO: work out pre-rewrite request URI
     }
 
 
@@ -94,6 +103,67 @@ class Request
      */
     public function get_uri()
     {
+        // Bail out if we've already worked this out
+        if (!is_null($this->_uri)) return $this->_uri;
+
+        // A lot of this method is copied from CodeIgniter, but I like to
+        // think I do considerably less mangling and back-and-forth (not
+        // to mention less abuse of regular expressions)
+        switch (strtoupper($this->_options['uri_protocol']))
+        {
+        // Attempt to automatically find the originally requested path
+        case 'AUTO':
+            $path = trim((isset($_SERVER['PATH_INFO']) 
+                            ? $_SERVER['PATH_INFO'] 
+                            : @getenv('PATH_INFO')), '/ ');
+
+            if (!empty($path))
+            {
+                $this->_uri = $path;
+                break;
+            }
+
+            $path = trim((isset($_SERVER['ORIG_PATH_INFO']) 
+                            ? $_SERVER['ORIG_PATH_INFO'] 
+                            : @getenv('ORIG_PATH_INFO')), '/ ');
+            
+            if (!empty($path))
+            {
+                $this->_uri = $path;
+                break;
+            }
+
+            // Didn't get anything
+            $this->_uri = '';
+            break;
+
+        // Use a $_GET variable
+        case 'GET':
+            if (isset($this->_get[$this->_options['uri_get_variable']]))
+            {
+                $this->_uri = trim(
+                    $this->_get[$this->_options['uri_get_variable']], '/ ');
+            }
+            else
+            {
+                $this->_uri = '';
+            }
+            break;
+
+        // Parse $_SERVER['REQUEST_URI'] (not implemented)
+        case 'REQUEST_URI':
+            break;
+
+        // Default: use the value of a specified variable (e.g. QUERY_STRING)
+        default:
+            $this->_uri = trim((isset($_SERVER[$this->_options['uri_protocol']])
+                                    ? $_SERVER[$this->_options['uri_protocol']]
+                                    : @getenv($this->_options['uri_protocol'])),
+                               '/ ');
+            break;
+        }
+
+        // Return whatever the result was
         return $this->_uri;
     }
 
