@@ -324,11 +324,19 @@ abstract class CSF
 /**
  * Convenience function for accessing CSF modules
  *
+ * If a module name is supplied, this returns the specified module, otherwise
+ * it returns a basic csfModule which will allow access to modules via the
+ * "property access" syntax, but nothing more.
+ *
  * @param   string  $name       Module name
+ * @return  mixed
  */
-function CSF($name)
+function CSF($name = null)
 {
-    return CSF::get($name);
+    if (is_null($name))
+        return new csfModule;
+    else
+        return CSF::get($name);
 }
 
 
