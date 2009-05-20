@@ -23,7 +23,7 @@
  * @todo    Do any HTTPDs require the REQUEST_URI method of obtaining the
  *          originally requested URI?
  */
-class Request
+class csfRequest
 {
     /** @var    array   Request options (initialised with defaults) */
     protected $_options = array(
@@ -85,13 +85,13 @@ class Request
         if ($this->_options['fix_magic_quotes'] && get_magic_quotes_gpc() == 1)
         {
             array_walk_recursive($this->_get, 
-                array('Request', '_stripslashes_array_walk'));
+                array('csfRequest', '_stripslashes_array_walk'));
             array_walk_recursive($this->_post,
-                array('Request', '_stripslashes_array_walk'));
+                array('csfRequest', '_stripslashes_array_walk'));
             array_walk_recursive($this->_cookie,
-                array('Request', '_stripslashes_array_walk'));
+                array('csfRequest', '_stripslashes_array_walk'));
             array_walk_recursive($this->_request,
-                array('Request', '_stripslashes_array_walk'));
+                array('csfRequest', '_stripslashes_array_walk'));
         }
     }
 
