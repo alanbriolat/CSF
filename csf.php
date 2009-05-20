@@ -266,13 +266,12 @@ abstract class CSF
     /**
      * Load a module
      *
-     * CSF figures out which file to include by looking for "$name.php" inside 
+     * CSF figures out which file to include by looking for "$module.php" inside
      * one of the module paths (searched in reverse order, in the same way as 
      * for loading libraries).  Once this has been done, CSF takes a very
-     * "hands-off" approach - it exposes the module name (either $name, or 
-     * $alias if supplied) as $MODULE_NAME, and the configuration (either as 
-     * supplied or loaded from CSF::config("modules.$MODULE_NAME")) as
-     * $MODULE_CONF.
+     * "hands-off" approach - it exposes the module name as $MODULE_NAME, and 
+     * the configuration (either as supplied or loaded from 
+     * CSF::config("modules.$MODULE_NAME")) as $MODULE_CONF.
      *
      * It is the responsibility of the module file itself to create and register
      * object(s).  Other issues such as multiple declarations (if one module is
@@ -281,39 +280,46 @@ abstract class CSF
      *
      * Throws csfModuleNotFoundException if no matching file could be found.
      *
-     * @param   string  $name       The name of the module to load
+     * @param   mixed   $name       Either the string name of the module to
+     *                              load, or a pair of (alias, module) to load
+     *                              a module under another name.
      * @param   mixed   $conf       Module configuration object - if set to 
      *                              null, will attempt to load from global
      *                              configuration, defaulting to an empty array
-     * @param   string  $alias      Name to use for the loaded module, 
-     *                              overriding $name if not null
      *
      * @throws  csfModuleNotFoundException
      */
-    public static function load_module($name, $conf = null, $alias = null)
+    public static function load_module($name, $conf = null)
     {
-        // Get the name the module should be registered as
-        $MODULE_NAME = is_null($alias) ? $name : $alias;
+        // Normalise the $name argument
+        if (!is_array($name))
+            $name = array($name, $name);
+        elseif (count($name) < 2)
+            $name = array($name[0], $name[0]);
+
+        // Extract both the module name and the actual module to load
+        list($MODULE_NAME, $module) = $name;
 
         // Get the module configuration if it hasn't been supplied
-        $MODULE_CONF = is_null($conf) 
-                        ? self::config("modules.$MODULE_NAME", array()) 
-                        : $conf;
+        if (is_null($conf))
+            $MODULE_CONF = self::config("modules.$MODULE_NAME", array());
+        else
+            $MODULE_CONF = $conf;
 
         // Find the path to the module file
         $MODULE_PATH = null;
         foreach (array_reverse(self::$_module_paths) as $path)
         {
-            if (file_exists($path.DIRSEP.$name.'.php'))
+            if (file_exists($path.DIRSEP.$module.'.php'))
             {
-                $MODULE_PATH = $path.DIRSEP.$name.'.php';
+                $MODULE_PATH = $path.DIRSEP.$module.'.php';
                 break;
             }
         }
 
         // Bail out if the file couldn't be found
         if (is_null($MODULE_PATH))
-            throw new csfModuleNotFoundException($name, self::$_module_paths);
+            throw new csfModuleNotFoundException($module, self::$_module_paths);
 
         // "Load" the module - it's now the module's job to register itself
         require $MODULE_PATH;
