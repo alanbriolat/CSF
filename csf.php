@@ -179,8 +179,8 @@ abstract class CSF
             $filepath = $path.DIRSEP.$name.'.php';
             if (file_exists($filepath))
             {
-                require_once $filepath;
                 self::$_libraries[] = $name;
+                require_once $filepath;
                 return;
             }
         }
