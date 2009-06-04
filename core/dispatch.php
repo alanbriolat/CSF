@@ -112,7 +112,12 @@ class Dispatch extends CSF_Module
         {
             // Sanitise pattern for use as regex
             $pattern = str_replace('#', '\#', $pattern);
-            if ( preg_match("#$pattern#A", $url) )
+            $pattern = "#$pattern#A";
+
+            if (!CSF::config('csf.dispatch.case_sensitive', true))
+                $pattern .= 'i';
+
+            if ( preg_match($pattern, $url) )
             {
                 // Find/load the controller class
                 $class = self::load_controller($route['controller']);
@@ -120,7 +125,7 @@ class Dispatch extends CSF_Module
                 $c = new $class();
                 // Dispatch the URL
                 $c->dispatch_url(preg_replace(
-                    "#$pattern#A", $route['rewrite'], $url));
+                    $pattern, $route['rewrite'], $url));
                 // Successfully dispatched
                 return;
             }
