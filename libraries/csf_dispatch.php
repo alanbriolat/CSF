@@ -84,6 +84,7 @@ class csfDispatch
         'routes'            => array(),
         'class_prefix'      => '',
         'class_suffix'      => '',
+        'case_sensitive'    => true,
     );
 
 
@@ -124,15 +125,20 @@ class csfDispatch
         {
             // Sanitise pattern for use as regex
             $pattern = str_replace('#', '\#', $pattern);
+            $pattern = "#$pattern#A";
+
+            if (!$this->_options['case_sensitive'])
+                $pattern .= 'i';
+
             // Does this pattern match?
-            if (preg_match("#$pattern#A", $uri))
+            if (preg_match($pattern, $uri))
             {
                 // Make sure the controller class is loaded
                 $class = $this->_load_controller($route['controller'], $uri);
                 // Create an instance of the controller
                 $c = new $class();
                 // Dispatch the URI to the controller (and return the result)
-                return $c->dispatch(preg_replace("#$pattern#A",
+                return $c->dispatch(preg_replace($pattern,
                                                  $route['rewrite'],
                                                  $uri));
             }
