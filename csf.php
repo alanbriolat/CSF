@@ -599,7 +599,7 @@ abstract class CSF_Module
                 throw new CSF_DependencyError("Expected module '{$dep['name']}'"
                     . " with interface '{$dep['interface']}' not loaded");
 
-            if (!(CSF::__get($dep['name']) instanceof $dep['interface']))
+            if (!(CSF::get($dep['name']) instanceof $dep['interface']))
                 throw new CSF_DependencyError("Dependency '{$dep['name']}' does"
                     . " not implement interface '{$dep['interface']}'");
         }
