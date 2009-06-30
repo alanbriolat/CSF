@@ -117,7 +117,7 @@ class csfDBStatement extends PDOStatement
      * Convenience method returning an associative array with 2 elements:
      * <ul>
      *  <li><var>data</var> - array of rows as associative arrays</li>
-     *  <li><var>rowcount</var> - number of rows in <var>data</var>
+     *  <li><var>rowcount</var> - number of rows in <var>data</var></li>
      * </ul>
      *
      * @return  array
