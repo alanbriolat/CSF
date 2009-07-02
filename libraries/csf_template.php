@@ -2,6 +2,11 @@
 /**
  * CodeScape Framework - Template library
  *
+ * A simple hierarchical template engine inspired by the
+ * {@link http://www.djangoproject.com/ Django} template engine.  The general
+ * principle is to leverage the fact PHP is already a template language (of 
+ * sorts) and make the hierarchical templating features available.
+ *
  * @package     CSF
  * @author      Alan Briolat <alan@codescape.net>
  * @copyright   (c) 2009, Alan Briolat
