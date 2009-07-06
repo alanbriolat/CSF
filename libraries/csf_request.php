@@ -6,6 +6,7 @@
  * @author      Alan Briolat <alan@codescape.net>
  * @copyright   (c) 2009, Alan Briolat
  * @license     http://www.gnu.org/licenses/gpl-3.0.txt GNU GPLv3
+ * @link        http://codescape.net/csf/doc/request/
  */
 
 /**
@@ -22,6 +23,8 @@
  * @todo    Test get_uri() against mod_php, PHP CGI, lighttpd, IIS
  * @todo    Do any HTTPDs require the REQUEST_URI method of obtaining the
  *          originally requested URI?
+ *
+ * @link    http://codescape.net/csf/doc/request/#csf_request
  */
 class CSF_Request
 {
