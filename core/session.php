@@ -34,7 +34,7 @@
  *  (2) Yes, I realise this isn't Y2K38-safe, but datetime formats vary too much
  *      between DBMSs to do it any other way.
  */
-class Session extends CSF_Module implements CSF_ISession
+class Session extends CSF_Module
 {
     // Dependencies
     protected $_depends = array(

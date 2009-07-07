@@ -31,7 +31,7 @@
  *      serialisation</li>
  * </ul>
  */
-class Encrypt extends CSF_Module implements CSF_IEncrypt
+class Encrypt extends CSF_Module
 {
     /** @var    resource    mcrypt module */
     protected $module;
