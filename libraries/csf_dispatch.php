@@ -79,7 +79,7 @@ class CSF_Dispatch
                 // Dispatch the URI to the controller
                 return $c->dispatch(preg_replace($pattern,
                                                  $route['rewrite'],
-                                                 $uri);
+                                                 $uri));
             }
         }
 
@@ -171,7 +171,7 @@ function CSF_dispatch_method_args($controller, $uri)
     // because method_exists and is_callable both return true for private and
     // protected methods.
     if ($method != 'dispatch_uri' 
-        && in_array($method, get_class_methods($controller))
+        && in_array($method, get_class_methods($controller)))
     {
         return call_user_func_array(array($controller, $method), $parts);
     }
