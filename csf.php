@@ -6,6 +6,7 @@
  * @author      Alan Briolat <alan@codescape.net>
  * @copyright   (c) 2008-2009, Alan Briolat
  * @license     http://www.gnu.org/licenses/gpl-3.0.txt GNU GPLv3
+ * @link        http://codescape.net/csf/doc/core/
  */
 
 /** Path to CSF directory */
@@ -20,17 +21,23 @@ define('CSF_PATH', dirname(__FILE__));
  *
  * Modules are assumed to be objects, and therefore assumed not to be copied 
  * by the assignment operator.
+ *
+ * @link    http://codescape.net/csf/doc/core/#csf
  */
 abstract class CSF
 {
     /** @var    array   Configuration array */
     protected static $_config = array();
+
     /** @var    array   Library paths */
     protected static $_library_paths = array();
+    
     /** @var    array   Module paths */
     protected static $_module_paths = array();
+    
     /** @var    array   Loaded libraries */
     protected static $_libraries = array();
+    
     /** @var    array   Loaded modules */
     protected static $_modules = array();
 
@@ -63,7 +70,7 @@ abstract class CSF
 
         // Use pretty exception handler?
         if (self::config('core.use_html_exception_handler', true))
-            set_exception_handler('csf_html_exception_handler');
+            set_exception_handler('CSF_html_exception_handler');
 
         // Store library/module paths
         foreach (self::config('core.library_paths', array()) as $path)
@@ -88,14 +95,14 @@ abstract class CSF
      * path.  The path is used to traverse the configuration array, and the
      * item at that particular point in the array is returned without any
      * further processing.  If the path could not be found, $default is 
-     * returned if supplied, otherwise a csfConfigNotFoundException is thrown.
+     * returned if supplied, otherwise a CSF_ConfigNotFound is thrown.
      *
      * @param   string  $path       Dot-separated path to configuration item
      * @param   mixed   $default    Value to return if not found
      * 
      * @return  mixed   Value at $path, or $default if not found
      *
-     * @throws  csfConfigNotFoundException
+     * @throws  CSF_ConfigNotFound
      */
     public static function config($path, $default = null)
     {
@@ -109,7 +116,7 @@ abstract class CSF
             {
                 if (func_num_args() < 2)
                 {
-                    throw new csfConfigNotFoundException($path);
+                    throw new CSF_ConfigNotFound($path);
                 }
                 else
                 {
@@ -162,7 +169,7 @@ abstract class CSF
      *
      * @param   string  $name       Library name
      *
-     * @throws  csfLibraryNotFoundException
+     * @throws  CSF_LibraryNotFound
      */
     public static function load_library($name)
     {
@@ -183,7 +190,7 @@ abstract class CSF
         }
 
         // If we got this far, we failed
-        throw new csfLibraryNotFoundException($name, self::$_library_paths);
+        throw new CSF_LibraryNotFound($name, self::$_library_paths);
     }
 
 
@@ -191,18 +198,18 @@ abstract class CSF
      * Register a module
      *
      * Store an object, making it accessible via the CSF module access methods.
-     * Throws csfModuleConflictException if $name is already in use.
+     * Throws CSF_ModuleConflict if $name is already in use.
      *
      * @param   string  $name       Module name/alias
      * @param   mixed   $module     The module object
      * 
-     * @throws  csfModuleConflictException
+     * @throws  CSF_ModuleConflict
      */
     public static function register($name, $module)
     {
         // See if the name conflicts
         if (array_key_exists($name, self::$_modules))
-            throw new csfModuleConflictException($name);
+            throw new CSF_ModuleConflict($name);
 
         // Register the module to the name
         self::$_modules[$name] = $module;
@@ -215,8 +222,8 @@ abstract class CSF
      * @param   string  $name       Module name
      * @param   string  $alias      New module alias
      *
-     * @throws  csfModuleNotRegisteredException
-     * @throws  csfModuleConflictException
+     * @throws  CSF_ModuleNotRegistered
+     * @throws  CSF_ModuleConflict
      */
     public static function alias($name, $alias)
     {
@@ -241,7 +248,7 @@ abstract class CSF
      * Get a registered module
      *
      * Return the module registered with the specified name.  If the module
-     * doesn't exist, throws csfModuleNotRegisteredException.  If you don't
+     * doesn't exist, throws CSF_ModuleNotRegistered.  If you don't
      * want the exception, call CSF::exists($name) first to see if the module
      * is registered.
      * 
@@ -249,12 +256,12 @@ abstract class CSF
      *
      * @return  mixed   The requested module
      *
-     * @throws  csfModuleNotRegisteredException
+     * @throws  CSF_ModuleNotRegistered
      */
     public static function get($name)
     {
         if (!self::exists($name))
-            throw new csfModuleNotRegisteredException($name);
+            throw new CSF_ModuleNotRegistered($name);
 
         return self::$_modules[$name];
     }
@@ -273,9 +280,16 @@ abstract class CSF
      * It is the responsibility of the module file itself to create and register
      * object(s).  Other issues such as multiple declarations (if one module is
      * loaded under multiple aliases), module name conflicts, etc. must also be
-     * handled by the module file.
+     * handled by the module file.  An example module file:
      *
-     * Throws csfModuleNotFoundException if no matching file could be found.
+     * <code>
+     * <?php
+     * CSF::load_library('csf_dispatch');
+     * CSF::register($MODULE_NAME, new CSF_Dispatch($MODULE_CONF));
+     * ?>
+     * </code>
+     *
+     * Throws CSF_ModuleNotFound if no matching file could be found.
      *
      * @param   mixed   $name       Either the string name of the module to
      *                              load, or a pair of (alias, module) to load
@@ -284,7 +298,7 @@ abstract class CSF
      *                              null, will attempt to load from global
      *                              configuration, defaulting to an empty array
      *
-     * @throws  csfModuleNotFoundException
+     * @throws  CSF_ModuleNotFound
      */
     public static function load_module($name, $conf = null)
     {
@@ -316,7 +330,7 @@ abstract class CSF
 
         // Bail out if the file couldn't be found
         if (is_null($MODULE_PATH))
-            throw new csfModuleNotFoundException($module, self::$_module_paths);
+            throw new CSF_ModuleNotFound($module, self::$_module_paths);
 
         // "Load" the module - it's now the module's job to register itself
         require $MODULE_PATH;
@@ -328,7 +342,7 @@ abstract class CSF
  * Convenience function for accessing CSF modules
  *
  * If a module name is supplied, this returns the specified module, otherwise
- * it returns a basic csfModule which will allow access to modules via the
+ * it returns a basic CSF_Module which will allow access to modules via the
  * "property access" syntax, but nothing more.
  *
  * @param   string  $name       Module name
@@ -337,7 +351,7 @@ abstract class CSF
 function CSF($name = null)
 {
     if (is_null($name))
-        return new csfModule;
+        return new CSF_Module();
     else
         return CSF::get($name);
 }
@@ -355,12 +369,12 @@ function CSF($name = null)
  * the single object, e.g.:
  *
  * <code>
- * $csf = new csfModule();
+ * $csf = new CSF_Module();
  * $csf->foo->bar();
  * $csf->bar->baz();
  * </code>
  */
-class csfModule
+class CSF_Module
 {
     /**
      * Get a module registered with CSF
@@ -370,6 +384,7 @@ class csfModule
      * but still be able to access this functionality.
      *
      * @param   string  $name       The module name
+     * @return  mixed
      */
     public function __get_csf_module($name)
     {
@@ -385,6 +400,7 @@ class csfModule
      * get this behaviour by calling $this->__get_csf_module($name).
      *
      * @param   string  $name       The module name
+     * @return  mixed
      */
     public function __get($name)
     {
@@ -394,7 +410,7 @@ class csfModule
 
 
 /** Configuration item not found */
-class csfConfigNotFoundException extends Exception
+class CSF_ConfigNotFound extends Exception
 {
     public function __construct($path)
     {
@@ -404,7 +420,7 @@ class csfConfigNotFoundException extends Exception
 }
 
 /** Library doesn't exist */
-class csfLibraryNotFoundException extends Exception
+class CSF_LibraryNotFound extends Exception
 {
     public function __construct($name, $paths)
     {
@@ -414,7 +430,7 @@ class csfLibraryNotFoundException extends Exception
 }
 
 /** Module already registered */
-class csfModuleConflictException extends Exception
+class CSF_ModuleConflict extends Exception
 {
     public function __construct($name)
     {
@@ -423,7 +439,7 @@ class csfModuleConflictException extends Exception
 }
 
 /** Module not registered */
-class csfModuleNotRegisteredException extends Exception
+class CSF_ModuleNotRegistered extends Exception
 {
     public function __construct($name)
     {
@@ -432,7 +448,7 @@ class csfModuleNotRegisteredException extends Exception
 }
 
 /** Module doesn't exist */
-class csfModuleNotFoundException extends Exception
+class CSF_ModuleNotFound extends Exception
 {
     public function __construct($name, $paths)
     {
@@ -445,12 +461,12 @@ class csfModuleNotFoundException extends Exception
 /**
  * Exception handler
  *
- * Outputs some nice HTML instead of PHP's default 
- * all-smashed-together-on-one-line output.
+ * Outputs some nice HTML instead of PHP's default whitespace-formatted output
+ * to make exceptions readable.
  *
  * @param   Exception   $e      The exception
  */
-function csf_html_exception_handler($e)
+function CSF_html_exception_handler($e)
 {
     echo "<p>"
         . "<strong>Fatal error:</strong> Uncaught exception '".get_class($e)."'"
@@ -470,6 +486,7 @@ function csf_html_exception_handler($e)
 /********************************************************************
  * CSF setup - extra bits of initialisation that MUST be done
  *******************************************************************/
+
+// Add the default library and module paths
 CSF::add_library_path(CSF_PATH.DIRECTORY_SEPARATOR.'libraries');
 CSF::add_module_path(CSF_PATH.DIRECTORY_SEPARATOR.'modules');
-
