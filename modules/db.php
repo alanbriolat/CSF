@@ -9,4 +9,4 @@
  */
 
 CSF::load_library('csf_db');
-CSF::register($MODULE_NAME, new csfDB($MODULE_CONF));
+CSF::register($MODULE_NAME, new CSF_DB($MODULE_CONF));

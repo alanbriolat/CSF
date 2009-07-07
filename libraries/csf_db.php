@@ -11,10 +11,10 @@
 /**
  * DB class
  *
- * The csfDB class extends the PDO database class, providing some useful extra
+ * The CSF_DB class extends the PDO database class, providing some useful extra
  * convenience functions.
  */
-class csfDB extends PDO
+class CSF_DB extends PDO
 {
     /** @var    array   Options array */
     protected $_options = array(
@@ -46,7 +46,7 @@ class csfDB extends PDO
         // Set error method
         $this->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         // Use custom statement class
-        $this->setAttribute(PDO::ATTR_STATEMENT_CLASS, array('csfDBStatement'));
+        $this->setAttribute(PDO::ATTR_STATEMENT_CLASS, array('CSF_DB_Statement'));
     }
 
 
@@ -73,7 +73,7 @@ class csfDB extends PDO
      * </code>
      *
      * @param   string  $query      The query to execute
-     * @return  csfDBStatement
+     * @return  CSF_DB_Statement
      */
     public function query($query)
     {
@@ -109,7 +109,7 @@ class csfDB extends PDO
  * This class extends the PDOStatement class, adding some useful convenience
  * functions.
  */
-class csfDBStatement extends PDOStatement
+class CSF_DB_Statement extends PDOStatement
 {
     /**
      * Fetch all rows and row count
@@ -143,7 +143,7 @@ class csfDBStatement extends PDOStatement
      * $stmt->execute('bar', 'baz');
      * </code>
      *
-     * @return  csfDBStatement
+     * @return  CSF_DB_Statement
      */
     public function execute()
     {
