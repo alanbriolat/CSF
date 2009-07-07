@@ -6,6 +6,7 @@
  * @author      Alan Briolat <alan@codescape.net>
  * @copyright   (c) 2009, Alan Briolat
  * @license     http://www.gnu.org/licenses/gpl-3.0.txt GNU GPLv3
+ * @link        http://codescape.net/csf/doc/request/
  */
 
 /**
@@ -22,8 +23,10 @@
  * @todo    Test get_uri() against mod_php, PHP CGI, lighttpd, IIS
  * @todo    Do any HTTPDs require the REQUEST_URI method of obtaining the
  *          originally requested URI?
+ *
+ * @link    http://codescape.net/csf/doc/request/#csf_request
  */
-class csfRequest
+class CSF_Request
 {
     /** @var    array   Request options (initialised with defaults) */
     protected $_options = array(
@@ -37,16 +40,21 @@ class csfRequest
         // The $_GET variable to use if uri_protocol=GET
         'uri_get_variable' => '_uri',
     );
-    /** @var    array   Cleaned $_GET variables */
-    protected $_get = array();
-    /** @var    array   Cleaned $_POST variables */
-    protected $_post = array();
-    /** @var    array   Cleaned $_COOKIE variables */
-    protected $_cookie = array();
-    /** @var    array   Cleaned $_REQUEST variables */
-    protected $_request = array();
+    
     /** @var    string  The request URI */
     protected $_uri = null;
+
+    /** @var    array   Cleaned $_GET variables */
+    public $GET = array();
+    
+    /** @var    array   Cleaned $_POST variables */
+    public $POST = array();
+    
+    /** @var    array   Cleaned $_COOKIE variables */
+    public $COOKIE = array();
+    
+    /** @var    array   Cleaned $_REQUEST variables */
+    public $REQUEST = array();
 
 
     /**
@@ -67,32 +75,108 @@ class csfRequest
             // Deep copy the arrays (in PHP arrays are deep copied, but objects
             // are referenced - however these variables should have no objects 
             // in them!)
-            $this->_get = $_GET;
-            $this->_post = $_POST;
-            $this->_cookie = $_COOKIE;
-            $this->_request = $_REQUEST;
+            $this->GET = $_GET;
+            $this->POST = $_POST;
+            $this->COOKIE = $_COOKIE;
+            $this->REQUEST = $_REQUEST;
         }
         else
         {
             // Use references to the arrays
-            $this->_get =& $_GET;
-            $this->_post =& $_POST;
-            $this->_cookie =& $_COOKIE;
-            $this->_request =& $_REQUEST;
+            $this->GET =& $_GET;
+            $this->POST =& $_POST;
+            $this->COOKIE =& $_COOKIE;
+            $this->REQUEST =& $_REQUEST;
         }
 
         // Fix the damage done by magic_quotes_gpc=on ?
         if ($this->_options['fix_magic_quotes'] && get_magic_quotes_gpc() == 1)
         {
-            array_walk_recursive($this->_get, 
-                array('csfRequest', '_stripslashes_array_walk'));
-            array_walk_recursive($this->_post,
-                array('csfRequest', '_stripslashes_array_walk'));
-            array_walk_recursive($this->_cookie,
-                array('csfRequest', '_stripslashes_array_walk'));
-            array_walk_recursive($this->_request,
-                array('csfRequest', '_stripslashes_array_walk'));
+            array_walk_recursive($this->GET,
+                array('CSF_Request', '_stripslashes_array_walk'));
+            array_walk_recursive($this->POST,
+                array('CSF_Request', '_stripslashes_array_walk'));
+            array_walk_recursive($this->COOKIE,
+                array('CSF_Request', '_stripslashes_array_walk'));
+            array_walk_recursive($this->REQUEST,
+                array('CSF_Request', '_stripslashes_array_walk'));
         }
+    }
+
+
+    /**
+     * Get the specified GET variables
+     *
+     * Extract and return the specified GET variables, ignoring those that do
+     * not exist.  If <var>$defaults</var> is supplied, merge the extracted 
+     * variables with it to override the default values and create the final
+     * output. 
+     *
+     * @see     _extract
+     * @param   array   $keys       Keys of variables to extract
+     * @param   array   $defaults   Default variable values
+     * @return  array
+     */
+    public function extract_GET($keys, $defaults = array())
+    {
+        return array_merge($defaults, $this->_extract($this->GET, $keys));
+    }
+
+
+    /**
+     * Get the specified POST variables
+     *
+     * Extract and return the specified POST variables, ignoring those that do
+     * not exist.  If <var>$defaults</var> is supplied, merge the extracted 
+     * variables with it to override the default values and create the final
+     * output. 
+     *
+     * @see     _extract
+     * @param   array   $keys       Keys of variables to extract
+     * @param   array   $defaults   Default variable values
+     * @return  array
+     */
+    public function extract_POST($keys, $defaults = array())
+    {
+        return array_merge($defaults, $this->_extract($this->POST, $keys));
+    }
+
+
+    /**
+     * Get the specified COOKIE variables
+     *
+     * Extract and return the specified COOKIE variables, ignoring those that do
+     * not exist.  If <var>$defaults</var> is supplied, merge the extracted 
+     * variables with it to override the default values and create the final
+     * output. 
+     *
+     * @see     _extract
+     * @param   array   $keys       Keys of variables to extract
+     * @param   array   $defaults   Default variable values
+     * @return  array
+     */
+    public function extract_COOKIE($keys, $defaults = array())
+    {
+        return array_merge($defaults, $this->_extract($this->COOKIE, $keys));
+    }
+
+
+    /**
+     * Get the specified REQUEST variables
+     *
+     * Extract and return the specified REQUEST variables, ignoring those that do
+     * not exist.  If <var>$defaults</var> is supplied, merge the extracted 
+     * variables with it to override the default values and create the final
+     * output. 
+     *
+     * @see     _extract
+     * @param   array   $keys       Keys of variables to extract
+     * @param   array   $defaults   Default variable values
+     * @return  array
+     */
+    public function extract_REQUEST($keys, $defaults = array())
+    {
+        return array_merge($defaults, $this->_extract($this->REQUEST, $keys));
     }
 
 
@@ -139,10 +223,10 @@ class csfRequest
 
         // Use a $_GET variable
         case 'GET':
-            if (isset($this->_get[$this->_options['uri_get_variable']]))
+            if (isset($this->GET[$this->_options['uri_get_variable']]))
             {
                 $this->_uri = trim(
-                    $this->_get[$this->_options['uri_get_variable']], '/ ');
+                    $this->GET[$this->_options['uri_get_variable']], '/ ');
             }
             else
             {
@@ -230,99 +314,19 @@ class csfRequest
 
 
     /**
-     * Get GET variable(s)
-     *
-     * @param   mixed   $keys       Variables to retrieve (or just return the
-     *                              whole array if default/null)
-     * @return  mixed   Single item or
-     */
-    public function GET($keys = null)
-    {
-        if (is_null($keys))
-            return $this->_get;
-        else
-            return $this->_extract($this->_get, $keys);
-    }
-
-
-    /**
-     * Get POST variable(s)
-     *
-     * @param   mixed   $keys       Variables to retrieve (or just return the
-     *                              whole array if default/null)
-     */
-    public function POST($keys = null)
-    {
-        if (is_null($keys))
-            return $this->_post;
-        else
-            return $this->_extract($this->_post, $keys);
-    }
-
-
-    /**
-     * Get COOKIE variable(s)
-     *
-     * @param   mixed   $keys       Variables to retrieve (or just return the
-     *                              whole array if default/null)
-     */
-    public function COOKIE($keys = null)
-    {
-        if (is_null($keys))
-            return $this->_cookie;
-        else
-            return $this->_extract($this->_cookie, $keys);
-    }
-
-
-    /**
-     * Get REQUEST variable(s)
-     *
-     * @param   mixed   $keys       Variables to retrieve (or just return the
-     *                              whole array if default/null)
-     */
-    public function REQUEST($keys = null)
-    {
-        if (is_null($keys))
-            return $this->_request;
-        else
-            return $this->_extract($this->_request, $keys);
-    }
-
-
-    /**
-     * Generic function for extracting either a single or multiple values from
-     * an associative array based on keys.
-     *
-     * If a single key is specified and the key doesn't exist, the usual
-     * behaviour of accessing non-existant elements in PHP arrays will apply - 
-     * a notice will be raised and null returned.
-     *
-     * If an array of keys is specified, and a particular key doesn't exist, it
-     * will be omitted from the returned array.  If you need all keys to exist,
-     * or want to supply default values, use:
-     *
-     *      $result = array_merge($defaults, $result_from_extract);
+     * Generic function for extracting multiple values from an associative array
      *
      * @param   array   $array      The array to extract from
-     * @param   mixed   $keys       The keys of the items to extract
-     *
-     * @return  mixed   Single item or associative array of items extracted
+     * @param   array   $keys       The keys of the items to extract
+     * @return  array
      */
     protected function _extract($array, $keys)
     {
-        if (is_array($keys))
-        {
-            $ret = array();
-            foreach ($keys as $k)
-                if (isset($array[$k]))
-                    $ret[$k] = $array[$k];
-            return $ret;
-        }
-        else
-        {
-            return $array[$keys];
-        }
+        $ret = array();
+        foreach ($keys as $k)
+            if (isset($array[$k]))
+                $ret[$k] = $array[$k];
+        return $ret;
     }
 
 
