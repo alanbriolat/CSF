@@ -6,6 +6,7 @@
  * @author      Alan Briolat <alan@codescape.net>
  * @copyright   (c) 2009, Alan Briolat
  * @license     http://www.gnu.org/licenses/gpl-3.0.txt GNU GPLv3
+ * @link        http://codescape.net/csf/doc/db/
  */
 
 /**
@@ -13,6 +14,8 @@
  *
  * The CSF_DB class extends the PDO database class, providing some useful extra
  * convenience functions.
+ *
+ * @link    http://codescape.net/csf/doc/db/#csf_db
  */
 class CSF_DB extends PDO
 {
@@ -108,6 +111,8 @@ class CSF_DB extends PDO
  *
  * This class extends the PDOStatement class, adding some useful convenience
  * functions.
+ *
+ * @link    http://codescape.net/csf/doc/db/#csf_db_statement
  */
 class CSF_DB_Statement extends PDOStatement
 {
