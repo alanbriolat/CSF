@@ -8,9 +8,6 @@
  * @license     http://www.gnu.org/licenses/gpl-3.0.txt GNU GPLv3
  */
 
-/** Shorthand alias for DIRECTORY_SEPARATOR */
-define('DIRSEP', DIRECTORY_SEPARATOR);
-
 /** Path to CSF directory */
 define('CSF_PATH', dirname(__FILE__));
 
@@ -176,7 +173,7 @@ abstract class CSF
         // Try and find the library
         foreach (array_reverse(self::$_library_paths) as $path)
         {
-            $filepath = $path.DIRSEP.$name.'.php';
+            $filepath = $path.DIRECTORY_SEPARATOR.$name.'.php';
             if (file_exists($filepath))
             {
                 self::$_libraries[] = $name;
@@ -310,9 +307,9 @@ abstract class CSF
         $MODULE_PATH = null;
         foreach (array_reverse(self::$_module_paths) as $path)
         {
-            if (file_exists($path.DIRSEP.$module.'.php'))
+            if (file_exists($path.DIRECTORY_SEPARATOR.$module.'.php'))
             {
-                $MODULE_PATH = $path.DIRSEP.$module.'.php';
+                $MODULE_PATH = $path.DIRECTORY_SEPARATOR.$module.'.php';
                 break;
             }
         }
@@ -473,6 +470,6 @@ function csf_html_exception_handler($e)
 /********************************************************************
  * CSF setup - extra bits of initialisation that MUST be done
  *******************************************************************/
-CSF::add_library_path(CSF_PATH.DIRSEP.'libraries');
-CSF::add_module_path(CSF_PATH.DIRSEP.'modules');
+CSF::add_library_path(CSF_PATH.DIRECTORY_SEPARATOR.'libraries');
+CSF::add_module_path(CSF_PATH.DIRECTORY_SEPARATOR.'modules');
 

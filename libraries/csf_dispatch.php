@@ -174,7 +174,8 @@ class csfDispatch
         // (Otherwise, let's try and load it ...)
 
         // File path
-        $path = $this->_options['controller_path'].DIRSEP.$controller.'.php';
+        $path = $this->_options['controller_path'].DIRECTORY_SEPARATOR
+            .$controller.'.php';
 
         // Attempt to include the file
         if (file_exists($path)) include $path;
