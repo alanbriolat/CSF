@@ -69,7 +69,7 @@ abstract class CSF
         self::$_config = $config;
 
         // Use pretty exception handler?
-        if (self::config('core.use_html_exception_handler', true))
+        if (self::config('core.use_html_exception_handler', false))
             set_exception_handler('CSF_html_exception_handler');
 
         // Store library/module paths
