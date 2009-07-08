@@ -112,20 +112,17 @@ abstract class CSF
         // Traverse the array
         foreach (explode('.', $path) as $p)
         {
-            if (!isset($item[$p]))
+            if (is_array($item) && array_key_exists($p, $item))
             {
-                if (func_num_args() < 2)
-                {
-                    throw new CSF_ConfigNotFound($path);
-                }
-                else
-                {
-                    return $default;
-                }
+                $item = $item[$p];
+            }
+            elseif (func_num_args() < 2)
+            {
+                throw new CSF_ConfigNotFound($path);
             }
             else
             {
-                $item = $item[$p];
+                return $default;
             }
         }
 
