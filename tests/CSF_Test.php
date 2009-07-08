@@ -1,8 +1,17 @@
 <?php
+/**
+ * CodeScape Framework - Unit Tests - CSF class
+ *
+ * @package     CSF_Test
+ * @author      Alan Briolat <alan@codescape.net>
+ * @copyright   (c) 2009, Alan Briolat
+ * @license     http://www.gnu.org/licenses/gpl-3.0.txt GNU GPLv3
+ */
 
 require 'PHPUnit/Framework.php';
 
 require 'csf.php';
+
 
 /**
  * A CSF subclass which adds the ability to be reset, for the purposes of
@@ -24,6 +33,10 @@ abstract class Testable_CSF extends CSF
     }
 }
 
+
+/**
+ * A simple class for distinct test objects
+ */
 class TestClass
 {
     public $val;
@@ -33,6 +46,7 @@ class TestClass
         $this->val = $val;
     }
 }
+
 
 /**
  * Unit tests for main CSF class
