@@ -103,8 +103,10 @@ class CSF_Test extends PHPUnit_Framework_TestCase
         $this->assertEquals('failed', Testable_CSF::config('x', 'failed'));
         // First incorrect part
         $this->assertEquals('failed', Testable_CSF::config('y.x', 'failed'));
-        // Non-first incorrect part
+        // Non-first incorrect part (array)
         $this->assertEquals('failed', Testable_CSF::config('c.z', 'failed'));
+        // Non-first incorrect part (non-array)
+        $this->assertEquals('failed', Testable_CSF::config('a.z', 'failed'));
     }
 
     /**
