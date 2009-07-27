@@ -6,77 +6,16 @@
  * @author      Alan Briolat <alan@codescape.net>
  * @copyright   (c) 2009, Alan Briolat
  * @license     http://www.gnu.org/licenses/gpl-3.0.txt GNU GPLv3
+ * @link        http://codescape.net/csf/doc/dispatch/
  */
 
 
 /**
  * Dispatch class
  *
- * csfDispatch is a delegating URI dispatcher.  The use of the word "delegating"
- * here refers to the fact that it does not force the way controllers must work,
- * instead just routing the request to the appropriate controller's dispatch 
- * function.  The advantage of this approach is that special controllers can
- * implement their own logic without having to rewrite/replace csfDispatch.
- *
- * Which controller to dispatch to is determined by a set of routes.  The
- * routes are defined as an associative array mapping from a regular expression
- * (to match the request URI against) to a controller name and rewrite rule.
- *
- * An example route array:
- * <code>
- * $routes = array(
- *      // View blog post by ID
- *      'blog/(\d+)' => array('controller' => 'BlogController',
- *                            'rewrite'    => 'view/$1'),
- *      // Other blog operations
- *      'blog/(.*)'  => array('controller' => 'BlogController',
- *                            'rewrite'    => '$1'),
- *      // Index page
- *      '.*'         => array('controller' => 'BlogController',
- *                            'rewrite'    => 'index'),
- * );
- * </code>
- *
- * In the above example, a visit to 'blog/12' would be dispatched as a call to
- * dispatch('view/12') on the BlogController controller.
- *
- * In the above example, a visit to '/blog/12' would be internally rewritten as
- * a call to dispatch_url('view/12') on the BlogController class.  It is 
- * important to note that a call to '/blog/12/addcomment' in this example would 
- * be rewritten to dispatch_url('view/12/addcomment').
- *
- * Some things to note about route processing:
- * <ul>
- *  <li> Routes are attempted first to last, so the first rule that matches a
- *       given request URI will be used </li>
- *  <li> URI matching and rewriting is done using {@link preg_match preg_match}
- *       and {@link preg_replace preg_replace}, so the syntax expected matches 
- *       that of those functions </li>
- *  <li> The "anchored" modifier is applied to the pattern so that it only 
- *       matches against the beginning of the string </li>
- *  <li> Whether or not URIs have a leading '/' should be consistent, and the
- *       routing rules should also conform to this (csfRequest::get_uri() always
- *       omits the leading '/') </li>
- * </ul>
- *
- * The "class_prefix" and "class_suffix" options define a prefix and suffix to
- * the controller name to create the class name, but are not applied to the
- * filename.  The file to load a controller class from is that with the same
- * name as the controller in the directory specified by the "controller_path"
- * option.  For example, using the following configuration:
- *
- * <code>
- * $conf['controller_path'] = 'controllers';
- * $conf['class_prefix'] = '';
- * $conf['class_suffix'] = 'Controller';
- * </code>
- *
- * would cause a request that is mapped to the "Blog" controller to attempt to 
- * load the "BlogController" class from "controllers/Blog.php".
- *
- * @todo    Documentation!
+ * @link    http://codescape.net/csf/doc/dispatch/#csf_dispatch
  */
-class csfDispatch
+class CSF_Dispatch
 {
     /** @var    array   Dispatcher options */
     protected $_options = array(
@@ -104,18 +43,18 @@ class csfDispatch
     /**
      * Dispatch URI
      *
-     * Perform URI rewriting and routing, dispatching the request to the correct
-     * controller class.  It should be possible to use this method for "soft
-     * redirects" too.
+     * Perform URI matching, rewriting and routing to the correct controller.
+     * The end result is calling dispatch_uri on an instance of the correct
+     * controller and returning its return value.  If no route matches the URI,
+     * CSF_Dispatch_NotFound is thrown.
      *
-     * @param   string  $uri        The URI to dispatch
+     * @see     _load_controller
      *
-     * @return  mixed   The return value of dispatch() on the controller
-     *
-     * @throws  csfControllerNotFoundException
-     * @throws  csfDispatchError404
+     * @param   string  $uri    The URI to dispatch
+     * @return  mixed
+     * @throws  CSF_Dispatch_NotFound
      */
-    public function dispatch($uri = '')
+    public function dispatch_uri($uri)
     {
         // Make sure there is no leading /
         $uri = ltrim($uri, '/');
@@ -124,135 +63,129 @@ class csfDispatch
         foreach ($this->_options['routes'] as $pattern => $route)
         {
             // Sanitise pattern for use as regex
-            $pattern = str_replace('#', '\#', $pattern);
-            $pattern = "#$pattern#A";
-
+            $pattern = '#'.str_replace('#', '\#', $pattern).'#A';
             if (!$this->_options['case_sensitive'])
+            {
                 $pattern .= 'i';
+            }
 
-            // Does this pattern match?
+            // Does the pattern match?
             if (preg_match($pattern, $uri))
             {
-                // Make sure the controller class is loaded
+                // Load the controller class
                 $class = $this->_load_controller($route['controller'], $uri);
                 // Create an instance of the controller
                 $c = new $class();
-                // Dispatch the URI to the controller (and return the result)
-                return $c->dispatch(preg_replace($pattern,
-                                                 $route['rewrite'],
-                                                 $uri));
+                // Dispatch the URI to the controller
+                return $c->dispatch_uri(preg_replace($pattern,
+                                                     $route['rewrite'],
+                                                     $uri));
             }
         }
 
         // If we made it this far, no route was matched
-        throw new csfDispatchError404("No route found matching '$uri'");
+        throw new CSF_Dispatch_NotFound("No route matching '$uri'");
     }
 
 
     /**
      * Load controller
      *
-     * Attempt to load a controller class, returning the full class name on
-     * success, and throwing an exception on failure.
+     * Attempt to lead a controller class, returning the full class name on
+     * success, or throwing CSF_Dispatch_NotFound on failure.
+     *
+     * The full class name is constructed from the controller name (or the last
+     * part if the name contains forward slashes), prefixed and suffixed with 
+     * the class_prefix and class_suffix option values respectively.
+     *
+     * The filename to attempt to load the controller from is the controller
+     * name suffixed with ".php" and prefixed with the controller_path option
+     * value.
      *
      * @param   string  $controller     Controller name
      * @param   string  $uri            Request URI (for error information)
-     *
-     * @return  string  The actual class name
-     *
-     * @throws  csfControllerNotFoundException
+     * @return  string
+     * @throws  CSF_Dispatch_NotFound
      */
     protected function _load_controller($controller, $uri)
     {
         // Class name
         $class = $this->_options['class_prefix']
-                    .$controller.$this->_options['class_suffix'];
+            .$controller.$this->_options['class_suffix'];
 
-        // If the class has already been loaded, we're done
+        // If the class already exists, we're done
         if (class_exists($class)) return $class;
 
-        // (Otherwise, let's try and load it ...)
-
-        // File path
+        // File path to load from
         $path = $this->_options['controller_path'].DIRECTORY_SEPARATOR
             .$controller.'.php';
 
         // Attempt to include the file
         if (file_exists($path)) include $path;
 
-        // If the class has been loaded now, we're done
+        // Check if the class was loaded
         if (class_exists($class)) return $class;
-        // ... otherwise, throw the exception
-        throw new csfControllerNotFoundException($controller, $uri);
+
+        // If we made it this far, we failed to load the controller =(
+        throw new CSF_Dispatch_NotFound("Failed to load controller "
+            ."$controller ($class) while attempting to dispatch '$uri'");
     }
 }
 
 
 /**
- * Controller base class
+ * Method-args URI dispatcher
  *
- * The only real requirement for a controller is that it has the "dispatch"
- * method, which can take a single argument (the request URI after rewriting
- * by csfDispatch::dispatch()).  This controller implements this method in a
- * a generically useful way: the URI is split up on '/' characters, the first
- * part being the method to call and the rest being arguments to that method.
- * If the URI is empty, the method defaults to "index".
+ * This URI dispatcher helps implement the "/controller/method/arg1/arg2" style
+ * of URI routing.  Given a controller and request URI, it will split the URI
+ * with the / character, use the first part as the method to call (defaulting to 
+ * "index") and any remaining parts as arguments to the method.  For example:
  *
- * The controller will only dispatch to methods that exist and are public - this
- * gives more control over the client-callable interface of a controller.
+ * <code>
+ * CSF_dispatch_method_args($con, 'foo/bar/baz');
+ * // is equivalent to
+ * $con->foo('bar', 'baz');
+ * </code>
+ *
+ * The return value is the return value of the method that is called.  If the
+ * method could not be called, CSF_Dispatch_NotFound is thrown.
+ *
+ * @link    http://codescape.net/csf/doc/dispatch/#csf_dispatch_method_args
+ *
+ * @param   mixed   $controller     Controller to call method on
+ * @param   mixed   $uri            URI to use for method and args
+ * @return  mixed
+ * @throws  CSF_Dispatch_NotFound
  */
-class csfController
+function CSF_dispatch_method_args($controller, $uri)
 {
-    /**
-     * Default dispatch action
-     *
-     * Treat the URI passed to the controller as method/arg1/arg2, resulting in
-     * calling $this->method(arg1, arg2).  If the URI is empty, call 
-     * $this->index().  This is probably what most controllers will want to do.
-     *
-     * Tighter control over method calls is given by specifically excluding 
-     * "dispatch", and only allowing dispatch to public methods.
-     *
-     * @param   string  $uri        The URI to dispatch
-     *
-     * @return  mixed   The return value of the called method
-     */
-    public function dispatch($uri = '')
+    // Split the URI
+    $parts = explode('/', trim($uri, '/'));
+
+    // If the URI is empty, default to index, otherwise use first part
+    $method = $parts[0] == '' ? 'index' : array_shift($parts);
+
+    // Check that the method is valid
+    // Blacklist the dispatch_uri method to prevent infinite recursion, and
+    // only allow calls to public methods.  get_class_methods must be used 
+    // because method_exists and is_callable both return true for private and
+    // protected methods.
+    if ($method != 'dispatch_uri' 
+        && in_array($method, get_class_methods($controller)))
     {
-        // Split the URI
-        $parts = explode('/', trim($uri, '/'));
-
-        // If the URI is empty, use index(), otherwise use first part
-        if ($parts[0] == '')
-            $method = 'index';
-        else
-            $method = array_shift($parts);
-
-        // Check that the method is valid and call it
-        if ($method != 'dispatch' && in_array($method, get_class_methods($this)))
-        {
-            return call_user_func_array(array($this, $method), $parts);
-        }
-        else
-        {
-            throw new csfDispatchError404("Method $method not found while ".
-                "attempting to serve '$uri'");
-        }
+        return call_user_func_array(array($controller, $method), $parts);
+    }
+    else
+    {
+        throw new CSF_Dispatch_NotFound("Method '$method' not found while "
+            . "attempting to dispatch '$uri'");
     }
 }
 
 
-/** Controller not found */
-class csfControllerNotFoundException extends Exception
-{
-    public function __construct($name, $uri)
-    {
-        parent::__construct("Controller $name not found while attempting to ".
-            "dispatch '$uri'");
-    }
-}
-
-/** Page not found (HTTP error 404) */
-class csfDispatchError404 extends Exception
+/**
+ * "Not Found" exception
+ */
+class CSF_Dispatch_NotFound extends Exception
 {
 }

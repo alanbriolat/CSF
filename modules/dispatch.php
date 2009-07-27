@@ -9,4 +9,4 @@
  */
 
 CSF::load_library('csf_dispatch');
-CSF::register($MODULE_NAME, new csfDispatch($MODULE_CONF));
+CSF::register($MODULE_NAME, new CSF_Dispatch($MODULE_CONF));
