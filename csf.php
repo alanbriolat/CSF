@@ -394,7 +394,7 @@ class CSF_Module
 
 
     /**
-     * Override the __get() magic method
+     * Allow $module->othermodule syntax
      *
      * Overrides the __get() method so that modules can be accessed using
      * $this->themodule.  If you want to override __get(), you can still
