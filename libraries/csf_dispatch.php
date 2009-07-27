@@ -54,7 +54,7 @@ class CSF_Dispatch
      * @return  mixed
      * @throws  CSF_Dispatch_NotFound
      */
-    public function dispatch($uri)
+    public function dispatch_uri($uri)
     {
         // Make sure there is no leading /
         $uri = ltrim($uri, '/');
@@ -77,9 +77,9 @@ class CSF_Dispatch
                 // Create an instance of the controller
                 $c = new $class();
                 // Dispatch the URI to the controller
-                return $c->dispatch(preg_replace($pattern,
-                                                 $route['rewrite'],
-                                                 $uri));
+                return $c->dispatch_uri(preg_replace($pattern,
+                                                     $route['rewrite'],
+                                                     $uri));
             }
         }
 
