@@ -487,9 +487,9 @@ function CSF_html_exception_handler($e)
 /**
  * Library autoloader
  *
- * Uses spl_autoload_register to add an autoload function which will attempt
- * to load classes by calling CSF::load_library using the lowercase of the
- * class name.
+ * Uses {@link spl_autoload_register spl_autoload_register} to add an autoload 
+ * callback which will attempt to load classes by calling CSF::load_library 
+ * (using the lowercase of the class name).
  *
  * @param   string  $name   Class name
  * @return  boolean         TRUE on success, FALSE on failure
