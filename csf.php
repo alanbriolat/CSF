@@ -72,6 +72,10 @@ abstract class CSF
         if (self::config('core.use_html_exception_handler', false))
             set_exception_handler('CSF_html_exception_handler');
 
+        // Register an autoload function?
+        if (self::config('core.register_library_autoload', false))
+            spl_autoload_register('CSF_library_autoload');
+
         // Store library/module paths
         foreach (self::config('core.library_paths', array()) as $path)
             self::add_library_path($path);
@@ -477,6 +481,30 @@ function CSF_html_exception_handler($e)
         . "<dt>Stack trace:</dt>\n"
         . "<dd><pre>".$e->getTraceAsString()."</pre></dd>\n"
         . "</dl>\n";
+}
+
+
+/**
+ * Library autoloader
+ *
+ * Uses spl_autoload_register to add an autoload function which will attempt
+ * to load classes by calling CSF::load_library using the lowercase of the
+ * class name.
+ *
+ * @param   string  $name   Class name
+ * @return  boolean         TRUE on success, FALSE on failure
+ */
+function CSF_library_autoload($name)
+{
+    try
+    {
+        CSF::load_library(strtolower($name));
+    }
+    catch (CSF_LibraryNotFound $e)
+    {
+        return false;
+    }
+    return true;
 }
 
 
