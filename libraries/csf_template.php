@@ -553,11 +553,11 @@ class CSF_Template_Template extends CSF_Template_Node
 
 
     /**
-     * Inherit from another template
+     * Extend another template
      *
      * @param   string      $template
      */
-    public function inherit($template)
+    public function extend($template)
     {
         // Check that we're not attempting multiple inheritance
         if ($this->_parent_path)
