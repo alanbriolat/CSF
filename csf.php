@@ -378,34 +378,18 @@ function CSF($name = null)
 class CSF_Module
 {
     /**
-     * Get a module registered with CSF
-     *
-     * This function actually wraps CSF::get($name).  It is split out from
-     * __get() so that other classes can override __get() in their own way
-     * but still be able to access this functionality.
-     *
-     * @param   string  $name       The module name
-     * @return  mixed
-     */
-    public function __get_csf_module($name)
-    {
-        return CSF::get($name);
-    }
-
-
-    /**
      * Allow $module->othermodule syntax
      *
      * Overrides the __get() method so that modules can be accessed using
      * $this->themodule.  If you want to override __get(), you can still
-     * get this behaviour by calling $this->__get_csf_module($name).
+     * get this behaviour by calling CSF_Module::__get($name).
      *
      * @param   string  $name       The module name
      * @return  mixed
      */
     public function __get($name)
     {
-        return $this->__get_csf_module($name);
+        return CSF::get($name);
     }
 }
 
