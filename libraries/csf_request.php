@@ -324,7 +324,7 @@ class CSF_Request
     {
         $ret = array();
         foreach ($keys as $k)
-            if (isset($array[$k]))
+            if (array_key_exists($k, $array))
                 $ret[$k] = $array[$k];
         return $ret;
     }
