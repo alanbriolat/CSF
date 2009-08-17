@@ -1,22 +1,30 @@
 <?php
 /**
- * CodeScape Framework - URL helpers
+ * CodeScape Framework - URL functions
  *
  * @package     CSF
  * @author      Alan Briolat <alan@codescape.net>
- * @copyright   (c) 2008, Alan Briolat
+ * @copyright   (c) 2008-2009, Alan Briolat
  * @license     http://www.gnu.org/licenses/gpl-3.0.txt GNU GPLv3
  */
 
 /**
  * Convert URI to a full URL
  *
- * Depends on the {@link Request} module being loaded for HTTPS detection.
+ * Convert a "site URL" to a full URL, using the values defined at
+ * url_functions.base_url and url_functions.secure_base_url in the 
+ * configuration.  If base_url is not set, it defaults to "/" - relative to the 
+ * root of the host.  If secure_base_url is not set, base_url with the protocol
+ * replaced with "https" is used.
+ *
+ * The <var>$secure</var> argument determines which base URL is used.  TRUE and
+ * FALSE (boolean, not strings) force secure and normal, respectively.  If 
+ * 'auto' is specified (default), then the secure URL is used if the current page
+ * was served over HTTPS.
  *
  * @param   string  $uri
  * @param   mixed   $secure     Whether or not to use the secure base URL
  * @return  string
- * @todo    More documentation!
  */
 function site_url($uri, $secure = 'auto')
 {
@@ -24,17 +32,17 @@ function site_url($uri, $secure = 'auto')
 
     // Check if this should use the secure URL
     $use_ssl = ($secure === TRUE) || 
-        ($secure === 'auto' && CSF::get('request')->is_secure());
+        ($secure === 'auto' && isset($_SERVER['HTTPS']));
 
     if ($use_ssl)
     {
-        return CSF::config('csf.url_helper.secure_base_url', 
+        return CSF::config('url_functions.secure_base_url', 
             preg_replace('#\w{1,10}://#A', 'https://',
-                CSF::config('csf.url_helper.base_url', '/'))).$uri;
+                CSF::config('url_functions.base_url', '/'))).$uri;
     }
     else
     {
-        return CSF::config('csf.url_helper.base_url', '/').$uri;
+        return CSF::config('url_functions.base_url', '/').$uri;
     }
 }
 
@@ -55,7 +63,7 @@ function redirect($uri)
     // Send the new location
     header('Location: ' . site_url($uri));
     // And for the clients that are too old/broken to understand...
-    echo 'Redirect to <a href="'.site_url($uri).'">'.site_url($uri).'</a> ...';
+    echo 'Redirecting to <a href="'.site_url($uri).'">'.site_url($uri).'</a> ...';
 }
 
 /**
