@@ -1,15 +1,15 @@
 <?php
 /**
- * CodeScape Framework - mcrypt wrapper module
+ * CodeScape Framework - Encryption class (mcrypt wrapper)
  *
  * @package     CSF
  * @author      Alan Briolat <alan@codescape.net>
- * @copyright   (c) 2008, Alan Briolat
+ * @copyright   (c) 2008-2009, Alan Briolat
  * @license     http://www.gnu.org/licenses/gpl-3.0.txt GNU GPLv3
  */
 
 /**
- * Mcrypt wrapper module
+ * Encrypt class
  *
  * This class provides a simple interface to commonly-used encryption methods 
  * using the mcrypt library, additionally using mhash for creating adequate
@@ -17,7 +17,11 @@
  * a particular cipher/mode/key combination.
  *
  * <code>
- * $enc = new Encrypt('secret key', MCRYPT_RIJNDAEL_128, MCRYPT_MODE_CBC);
+ * $enc = new CSF_Encrypt(array(
+ *     'key' => 'secret key',
+ *     'cipher' => MCRYPT_RIJNDAEL_128,
+ *     'mode' => MCRYPT_MODE_CBC,
+ * ));
  * echo $enc->decrypt($enc->encrypt('some secret text'));
  * // Will output 'some secret text'
  * </code>
@@ -28,11 +32,21 @@
  *      encryption of values, returning a raw binary string</li>
  *  <li><b>encode/decode:</b> Encrypt/decrypt with base64 encoding</li>
  *  <li><b>encode_var/decode_var:</b> Encode/decode with variable 
- *      serialisation</li>
+ *      serialisation and base64 encoding</li>
  * </ul>
  */
-class Encrypt extends CSF_Module
+class CSF_Encrypt
 {
+    /** @var    array       Encryption options */
+    protected $_options = array(
+        // Encryption key - do not forget to supply a key!
+        'key' => '',
+        // mcrypt cipher module
+        'cipher' => MCRYPT_RIJNDAEL_256,
+        // mcrypt encryption mode
+        'mode' => MCRYPT_MODE_CBC,
+    );
+
     /** @var    resource    mcrypt module */
     protected $module;
     /** @var    int         Initialisation vector size */
@@ -46,19 +60,21 @@ class Encrypt extends CSF_Module
      * Load the necessary encryption module and convert the key to the correct 
      * length.
      *
-     * @param   string  $key        Encryption key
-     * @param   string  $cipher     Encryption cipher
-     * @param   string  $mode       Encryption mode
+     * @param   array   $options        Options array
      * @throws  Exception
      */
-    public function __construct($key, 
-                                $cipher = MCRYPT_RIJNDAEL_256, 
-                                $mode = MCRYPT_MODE_CBC)
+    public function __construct($options = array())
     {
+        // Merge options
+        $this->_options = array_merge($this->_options, $options);
+
+        $key = $this->_options['key'];
+        $cipher = $this->_options['cipher'];
+        $mode = $this->_options['mode'];
+
         //  Open the module
         $this->module = mcrypt_module_open($cipher, '', $mode, '');
         if ( $this->module === FALSE )
-
             throw new Exception("Encrypt: Could not load cipher '$cipher'".
                " in mode '$mode'");
 
