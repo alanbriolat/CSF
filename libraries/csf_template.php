@@ -19,6 +19,7 @@
  * Template library class
  *
  * @link    http://codescape.net/csf/doc/template/#csf_template
+ * @todo    Catch exceptions, end output buffering and re-throw
  */
 class CSF_Template
 {
