@@ -29,11 +29,10 @@ class CSF_Log
     /** @var    array   Logging levels */
     protected $_levels = array(
         'none'      => 0,
-        'critical'  => 10,
-        'error'     => 20,
-        'warning'   => 30,
-        'info'      => 40,
-        'debug'     => 50,
+        'error'     => 10,
+        'warn'      => 20,
+        'info'      => 30,
+        'debug'     => 40,
     );
 
     /** @var    resource    Log file pointer */
