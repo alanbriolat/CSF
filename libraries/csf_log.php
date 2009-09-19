@@ -20,7 +20,8 @@ class CSF_Log
 {
     /** @var    array   Options array */
     protected $_options = array(
-        'format'    => '[%s] %s',
+        'format'    => '[%1$s] %2$s',
+        'date_format' => '%Y/%m/%d-%H:%M:%S',
         'level'     => 'debug',
         'filename'  => 'log.log',
     );
@@ -109,7 +110,11 @@ class CSF_Log
 
         // Write the log message if the current log level allows it
         if ($this->_levels[$level] <= $this->_levels[$this->_options['level']])
-            $this->write(sprintf($this->_options['format'], $level, $msg));
+            $this->write(sprintf($this->_options['format'],
+                $level,
+                $msg,
+                strftime($this->_options['date_format'])
+            ));
     }
 
 
