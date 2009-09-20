@@ -31,7 +31,7 @@ class CSF_Request
     /** @var    array   Request options (initialised with defaults) */
     protected $_options = array(
         // Copy superglobals rather than modifying them
-        'preserve_original' => false,
+        'preserve_original' => true,
         // Attempt to fix the damage caused my magic quotes, if enabled
         'fix_magic_quotes' => true,
         // Method for getting the URI (AUTO, GET, REQUEST_URI, or the name of
