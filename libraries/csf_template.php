@@ -9,7 +9,7 @@
  *
  * @package     CSF
  * @author      Alan Briolat <alan@codescape.net>
- * @copyright   (c) 2009, Alan Briolat
+ * @copyright   (c) 2009-2010, Alan Briolat
  * @license     http://www.gnu.org/licenses/gpl-3.0.txt GNU GPLv3
  * @link        http://codescape.net/csf/doc/template/
  */
@@ -342,6 +342,18 @@ class CSF_Template_Template extends CSF_Template_Node
 
         if (!file_exists($this->_path))
             throw new CSF_Template_Exception("Template not found: $tpl");
+    }
+
+
+    /**
+     * Render another template using the same CSF_Template instance
+     *
+     * @param   string      $tpl        Template name
+     * @param   mixed       $C          Context object
+     */
+    public function render_other($tpl, $C = array())
+    {
+        return $this->_engine->render($tpl, $C);
     }
 
 
